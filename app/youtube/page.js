@@ -4,6 +4,8 @@ import { useState } from "react";
 export default function YouTubePage() {
   const [isFormVisible, setIsFormVisible] = useState(true);
   const [result, setResult] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     gradeLevel: "pre-k",
     numberOfQuestions: 3,
@@ -62,6 +64,8 @@ export default function YouTubePage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch("/api/youtubequestion", {
@@ -81,6 +85,9 @@ export default function YouTubePage() {
       setIsFormVisible(false);
     } catch (error) {
       console.error("Error submitting form:", error);
+      setError("Failed to load questions. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -214,21 +221,37 @@ export default function YouTubePage() {
         </div>
       ) : (
         <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-lg p-6 animate-blurIn">
-          <div className="markdown-content" id="md-content-63484949">
-            {result.map((item, index) => (
-              <div key={index}>
-                <h3>{index + 1}. {item.question}</h3>
-                <p>
-                  {item.options.map((option, i) => (
-                    <span key={i}>
-                      {String.fromCharCode(97 + i)}. {option} <br />
-                    </span>
-                  ))}
-                </p>
-                <p><strong>Answer:</strong> {item.answer}</p>
-              </div>
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center">
+              <svg
+                className="animate-spin h-5 w-5 text-blue-500"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 22c5.52 0 10-4.48 10-10s-4.48-10-10-10S2 6.48 2 12s4.48 10 10 10zm1-18h-2v6h6v-2h-4V4zm-1 14h2v-6H8v2h4v4z"></path>
+              </svg>
+              <span className="ml-2 text-blue-500">Loading...</span>
+            </div>
+          ) : error ? (
+            <div className="text-red-500">{error}</div>
+          ) : (
+            <div className="markdown-content" id="md-content-63484949">
+              {result?.map((item, index) => (
+                <div key={index}>
+                  <h3>{index + 1}. {item.question}</h3>
+                  <p>
+                    {item.options.map((option, i) => (
+                      <span key={i}>
+                        {String.fromCharCode(97 + i)}. {option} <br />
+                      </span>
+                    ))}
+                  </p>
+                  <p><strong>Answer:</strong> {item.answer}</p>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="animate-blurIn" data-tour-id="message-actions">
             <div className="flex space-x-2">
               <button className="flex items-center border p-2 rounded-lg text-gray-700">
