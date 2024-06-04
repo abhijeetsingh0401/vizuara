@@ -65,6 +65,7 @@ export default function YouTubePage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsLoading(true);
+    setIsFormVisible(false);
     setError(null);
 
     try {
