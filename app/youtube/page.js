@@ -1,5 +1,6 @@
 'use client'
 import { useState } from "react";
+import { jsPDF } from "jspdf";
 
 export default function YouTubePage() {
   const [isFormVisible, setIsFormVisible] = useState(true);
@@ -11,6 +12,9 @@ export default function YouTubePage() {
     numberOfQuestions: 3,
     questionTypes: "MCQ",
     videoIdOrURL: "",
+    hardQuestions: 1,
+    mediumQuestions: 1,
+    easyQuestions: 1,
   });
 
   const gradeLevels = [
@@ -62,6 +66,46 @@ export default function YouTubePage() {
     setFormData({ ...formData, [name]: value });
   };
 
+  const handleSliderChange = (type, value) => {
+    const totalQuestions = formData.numberOfQuestions;
+    const otherTypes = {
+      hard: ["medium", "easy"],
+      medium: ["hard", "easy"],
+      easy: ["hard", "medium"],
+    };
+
+    const otherSliders = otherTypes[type];
+
+    // Ensure value does not exceed totalQuestions
+    if (value > totalQuestions) {
+      value = totalQuestions;
+    }
+
+    let remainingQuestions = totalQuestions - value;
+
+    // Get the current values of the other sliders
+    let otherValues = otherSliders.map(slider => formData[`${slider}Questions`]);
+
+    // Calculate the new values for the other sliders
+    if (remainingQuestions >= 0) {
+      let newOtherValues = otherValues.map((v, i) => {
+        if (remainingQuestions <= 0) {
+          return 0;
+        }
+        let newValue = Math.floor(remainingQuestions / (otherValues.length - i));
+        remainingQuestions -= newValue;
+        return newValue;
+      });
+
+      setFormData({
+        ...formData,
+        [`${type}Questions`]: value,
+        [`${otherSliders[0]}Questions`]: newOtherValues[0],
+        [`${otherSliders[1]}Questions`]: newOtherValues[1],
+      });
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsLoading(true);
@@ -77,6 +121,8 @@ export default function YouTubePage() {
         body: JSON.stringify(formData),
       });
 
+      console.log("formData:", formData)
+
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -91,6 +137,60 @@ export default function YouTubePage() {
       setIsLoading(false);
     }
   };
+
+  const handleExport = (result) => {
+    const doc = new jsPDF();
+
+    // Initial Y position
+    let yPos = 10;
+
+    // Add questions and options
+    result.forEach((item, index) => {
+      const questionText = `${index + 1}. ${item.question}`;
+      const questionLines = doc.splitTextToSize(questionText, 180);
+      doc.text(questionLines, 10, yPos);
+      yPos += questionLines.length * 10; // Space after the question
+
+      item.options.forEach((option, i) => {
+        const optionText = `${String.fromCharCode(97 + i)}. ${option}`;
+        const optionLines = doc.splitTextToSize(optionText, 180);
+        doc.text(optionLines, 20, yPos);
+        yPos += optionLines.length * 10; // Space between options
+      });
+
+      // Add extra space after each set of options
+      yPos += 10;
+    });
+
+    // Add a new page for answers
+    doc.addPage();
+    doc.text("Answers", 10, 10);
+    yPos = 20;
+
+    result.forEach((item, index) => {
+      const answerText = `${index + 1}. ${item.answer}`;
+      const answerLines = doc.splitTextToSize(answerText, 180);
+      doc.text(answerLines, 10, yPos);
+      yPos += answerLines.length * 10; // Space after the answer
+
+      const explanationText = `Explanation: ${item.explanation}`;
+      const explanationLines = doc.splitTextToSize(explanationText, 180);
+      doc.text(explanationLines, 10, yPos);
+      yPos += explanationLines.length * 10; // Space after the explanation
+
+      // Add extra space after each answer and explanation set
+      yPos += 10;
+
+      // If yPos exceeds page height, add a new page
+      if (yPos > 280) {
+        doc.addPage();
+        yPos = 20;
+      }
+    });
+
+    doc.save("questions_and_answers.pdf");
+  };
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -167,7 +267,16 @@ export default function YouTubePage() {
                   required=""
                   className="border border-gray-300 rounded-lg w-full h-10 px-2 bg-white"
                   value={formData.numberOfQuestions}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    setFormData({
+                      ...formData,
+                      numberOfQuestions: value,
+                      hardQuestions: Math.floor(value / 3),
+                      mediumQuestions: Math.floor(value / 3),
+                      easyQuestions: value - 2 * Math.floor(value / 3),
+                    });
+                  }}
                 >
                   {numberOfQuestions.map((number) => (
                     <option key={number.value} value={number.value}>
@@ -194,6 +303,45 @@ export default function YouTubePage() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Hard Questions:
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max={formData.numberOfQuestions}
+                  value={formData.hardQuestions}
+                  onChange={(e) => handleSliderChange("hard", parseInt(e.target.value, 10))}
+                />
+                <span>{formData.hardQuestions}</span>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Medium Questions:
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max={formData.numberOfQuestions}
+                  value={formData.mediumQuestions}
+                  onChange={(e) => handleSliderChange("medium", parseInt(e.target.value, 10))}
+                />
+                <span>{formData.mediumQuestions}</span>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Easy Questions:
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max={formData.numberOfQuestions}
+                  value={formData.easyQuestions}
+                  onChange={(e) => handleSliderChange("easy", parseInt(e.target.value, 10))}
+                />
+                <span>{formData.easyQuestions}</span>
               </div>
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
@@ -224,23 +372,16 @@ export default function YouTubePage() {
         <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-lg p-6 animate-blurIn">
           {isLoading ? (
             <div className="flex justify-center items-center">
-              <svg
-                className="animate-spin h-5 w-5 text-blue-500"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 22c5.52 0 10-4.48 10-10s-4.48-10-10-10S2 6.48 2 12s4.48 10 10 10zm1-18h-2v6h6v-2h-4V4zm-1 14h2v-6H8v2h4v4z"></path>
-              </svg>
-              <span className="ml-2 text-blue-500">Loading...</span>
+              <img src='/bouncing-circles.svg' alt="Loading" className="w-16 h-16" />
             </div>
           ) : error ? (
             <div className="text-red-500">{error}</div>
           ) : (
             <div className="markdown-content" id="md-content-63484949">
+              {/* First loop to print questions and options */}
               {result?.map((item, index) => (
                 <div key={index}>
-                  <h3>{index + 1}. {item.question}</h3>
+                  <h3>{index + 1}. {item.question} ({item.difficulty})</h3>
                   <p>
                     {item.options.map((option, i) => (
                       <span key={i}>
@@ -248,10 +389,21 @@ export default function YouTubePage() {
                       </span>
                     ))}
                   </p>
-                  <p><strong>Answer:</strong> {item.answer}</p>
+                </div>
+              ))}
+
+              {/* Print Answers heading */}
+              <h2>Answers</h2>
+
+              {/* Second loop to print answers and explanations */}
+              {result?.map((item, index) => (
+                <div key={index}>
+                  <p><strong>{index + 1}.</strong> {item.answer}</p>
+                  <p><em>{item.explanation}</em></p>
                 </div>
               ))}
             </div>
+
           )}
           <div className="animate-blurIn" data-tour-id="message-actions">
             <div className="flex space-x-2">
@@ -266,7 +418,7 @@ export default function YouTubePage() {
                 </svg>
                 Copy
               </button>
-              <button className="flex items-center border p-2 rounded-lg text-gray-700">
+              <button className="flex items-center border p-2 rounded-lg text-gray-700" onClick={() => handleExport(result)}>
                 <svg
                   className="h-5 w-5 mr-1"
                   xmlns="http://www.w3.org/2000/svg"

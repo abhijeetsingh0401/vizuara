@@ -8,9 +8,11 @@ const OpenAI_Key = process.env.OpenAI_Key;
 
 export async function POST(request) {
     try {
-        const { gradeLevel, numberOfQuestions, questionTypes, videoIdOrURL } = await request.json();
 
-        const result = await main(videoIdOrURL, YTAPI_Key, OpenAI_Key, gradeLevel, numberOfQuestions, questionTypes);
+        const body = await request.json();
+        const { gradeLevel, numberOfQuestions, questionTypes, videoIdOrURL, hardQuestions, mediumQuestions, easyQuestions } = body;
+
+        const result = await main(videoIdOrURL, YTAPI_Key, OpenAI_Key, gradeLevel, numberOfQuestions, questionTypes, hardQuestions, mediumQuestions, easyQuestions);
         if (result) {
             return new Response(JSON.stringify(result), {
                 status: 200,
@@ -115,17 +117,33 @@ async function fetchTranscript(videoId) {
     }
 }
 
-async function generateQuestions(transcript, gradeLevel, numQuestions, questionType, openaiApiKey) {
+async function generateQuestions(transcript, gradeLevel, numQuestions, questionType, openaiApiKey, hardQuestions, mediumQuestions, easyQuestions) {
     const openai = new OpenAI({ apiKey: openaiApiKey });
 
     const prompt = `
-Generate ${numQuestions} ${questionType} questions with correct answers for a ${gradeLevel} grade student based on the following video transcript. Provide the output in the following JSON format:
+Generate ${numQuestions} ${questionType} questions with correct answers for a ${gradeLevel} grade student based on the following video transcript. The questions should be divided into three categories: ${hardQuestions} hard questions, ${mediumQuestions} medium questions, and ${easyQuestions} easy questions. Provide an explanation for each question and answer. Provide the output in the following JSON format:
 
 [
   {
+    "difficulty": "easy",
     "question": "Question text",
     "options": ["Option A", "Option B", "Option C", "Option D"],
-    "answer": "Correct Option"
+    "answer": "Correct Option",
+    "explanation": "Explanation of the correct answer"
+  },
+  {
+    "difficulty": "medium",
+    "question": "Question text",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "answer": "Correct Option",
+    "explanation": "Explanation of the correct answer"
+  },
+  {
+    "difficulty": "hard",
+    "question": "Question text",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "answer": "Correct Option",
+    "explanation": "Explanation of the correct answer"
   }
 ]
 
@@ -147,7 +165,7 @@ ${transcript}
     }
 }
 
-async function main(videoUrl, youtubeApiKey, openaiApiKey, gradeLevel, numQuestions, questionType) {
+async function main(videoUrl, youtubeApiKey, openaiApiKey, gradeLevel, numQuestions, questionType, hardQuestions, mediumQuestions, easyQuestions) {
     try {
         const { videoId, captionsAvailable } = await checkTranscriptAvailability(videoUrl, youtubeApiKey);
 
@@ -168,7 +186,7 @@ async function main(videoUrl, youtubeApiKey, openaiApiKey, gradeLevel, numQuesti
             return null;
         }
 
-        return await generateQuestions(transcript, gradeLevel, numQuestions, questionType, openaiApiKey);
+        return await generateQuestions(transcript, gradeLevel, numQuestions, questionType, openaiApiKey, hardQuestions, mediumQuestions, easyQuestions);
     } catch (error) {
         console.error('Error in main function:', error);
         return null;
