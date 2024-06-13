@@ -1,14 +1,16 @@
 'use client'
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { jsPDF } from "jspdf";
 
 export default function YouTubePage() {
+  const contentRef = useRef(null);
+
   const [isFormVisible, setIsFormVisible] = useState(true);
   const [result, setResult] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    gradeLevel: "pre-k",
+    gradeLevel: "5th-grade",
     numberOfQuestions: 3,
     questionTypes: "MCQ",
     videoIdOrURL: "",
@@ -18,12 +20,6 @@ export default function YouTubePage() {
   });
 
   const gradeLevels = [
-    { value: "pre-k", label: "Pre-K" },
-    { value: "kindergarten", label: "Kindergarten" },
-    { value: "1st-grade", label: "1st grade" },
-    { value: "2nd-grade", label: "2nd grade" },
-    { value: "3rd-grade", label: "3rd grade" },
-    { value: "4th-grade", label: "4th grade" },
     { value: "5th-grade", label: "5th grade" },
     { value: "6th-grade", label: "6th grade" },
     { value: "7th-grade", label: "7th grade" },
@@ -32,27 +28,29 @@ export default function YouTubePage() {
     { value: "10th-grade", label: "10th grade" },
     { value: "11th-grade", label: "11th grade" },
     { value: "12th-grade", label: "12th grade" },
-    { value: "university", label: "University" },
-    { value: "year-1", label: "Year 1" },
-    { value: "year-2", label: "Year 2" },
-    { value: "year-3", label: "Year 3" },
-    { value: "year-4", label: "Year 4" },
-    { value: "year-5", label: "Year 5" },
-    { value: "year-6", label: "Year 6" },
-    { value: "year-7", label: "Year 7" },
-    { value: "year-8", label: "Year 8" },
-    { value: "year-9", label: "Year 9" },
-    { value: "year-10", label: "Year 10" },
-    { value: "year-11", label: "Year 11" },
-    { value: "year-12", label: "Year 12" },
-    { value: "year-13", label: "Year 13" },
   ];
 
   const numberOfQuestions = [
+    { value: 1, label: "1" },
+    { value: 2, label: "2" },
     { value: 3, label: "3" },
+    { value: 4, label: "4" },
     { value: 5, label: "5" },
+    { value: 6, label: "6" },
     { value: 7, label: "7" },
+    { value: 8, label: "8" },
+    { value: 9, label: "9" },
     { value: 10, label: "10" },
+    { value: 11, label: "11" },
+    { value: 12, label: "12" },
+    { value: 13, label: "13" },
+    { value: 14, label: "14" },
+    { value: 15, label: "15" },
+    { value: 16, label: "16" },
+    { value: 17, label: "17" },
+    { value: 18, label: "18" },
+    { value: 19, label: "19" },
+    { value: 20, label: "20" }
   ];
 
   const questionTypes = [
@@ -140,57 +138,80 @@ export default function YouTubePage() {
 
   const handleExport = (result) => {
     const doc = new jsPDF();
-
+  
     // Initial Y position
     let yPos = 10;
-
+  
     // Add questions and options
     result.forEach((item, index) => {
       const questionText = `${index + 1}. ${item.question}`;
       const questionLines = doc.splitTextToSize(questionText, 180);
       doc.text(questionLines, 10, yPos);
       yPos += questionLines.length * 10; // Space after the question
-
+  
       item.options.forEach((option, i) => {
         const optionText = `${String.fromCharCode(97 + i)}. ${option}`;
         const optionLines = doc.splitTextToSize(optionText, 180);
         doc.text(optionLines, 20, yPos);
         yPos += optionLines.length * 10; // Space between options
       });
-
+  
       // Add extra space after each set of options
       yPos += 10;
     });
-
+  
     // Add a new page for answers
     doc.addPage();
     doc.text("Answers", 10, 10);
     yPos = 20;
-
+  
     result.forEach((item, index) => {
-      const answerText = `${index + 1}. ${item.answer}`;
-      const answerLines = doc.splitTextToSize(answerText, 180);
-      doc.text(answerLines, 10, yPos);
-      yPos += answerLines.length * 10; // Space after the answer
-
+      const correctOptionIndex = item.options.indexOf(item.answer);
+      const correctOptionText = `${index + 1}. ${String.fromCharCode(97 + correctOptionIndex)}. ${item.answer}`;
+  
+      const correctOptionLines = doc.splitTextToSize(correctOptionText, 180);
+      doc.text(correctOptionLines, 10, yPos);
+      yPos += correctOptionLines.length * 10; // Space after the correct option
+  
       const explanationText = `Explanation: ${item.explanation}`;
       const explanationLines = doc.splitTextToSize(explanationText, 180);
       doc.text(explanationLines, 10, yPos);
       yPos += explanationLines.length * 10; // Space after the explanation
-
+  
       // Add extra space after each answer and explanation set
       yPos += 10;
-
+  
       // If yPos exceeds page height, add a new page
       if (yPos > 280) {
         doc.addPage();
         yPos = 20;
       }
     });
-
+  
     doc.save("questions_and_answers.pdf");
   };
+  
+  
 
+  const handleCopy = () => {
+    if (contentRef.current) {
+      const content = contentRef.current.innerText;
+      navigator.clipboard.writeText(content).then(() => {
+        alert('Content copied to clipboard');
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+    }
+  };
+
+  const handleReadAloud = () => {
+    if (contentRef.current) {
+      const content = contentRef.current.innerText;
+      const speech = new SpeechSynthesisUtterance(content);
+      speech.lang = 'en-US'; // Set the language
+      window.speechSynthesis.speak(speech);
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -204,10 +225,13 @@ export default function YouTubePage() {
                   className="flex items-center text-blue-500"
                   onClick={() =>
                     setFormData({
-                      gradeLevel: "pre-k",
+                      gradeLevel: "5th-grade",
                       numberOfQuestions: 3,
                       questionTypes: "MCQ",
                       videoIdOrURL: "",
+                      hardQuestions: 1,
+                      mediumQuestions: 1,
+                      easyQuestions: 1,
                     })
                   }
                 >
@@ -220,17 +244,6 @@ export default function YouTubePage() {
                     <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"></path>
                   </svg>
                   Clear inputs
-                </button>
-                <button className="flex items-center text-blue-500">
-                  <svg
-                    className="h-5 w-5 mr-1"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
-                  </svg>
-                  Exemplar
                 </button>
               </div>
             </div>
@@ -377,14 +390,16 @@ export default function YouTubePage() {
           ) : error ? (
             <div className="text-red-500">{error}</div>
           ) : (
-            <div className="markdown-content" id="md-content-63484949">
+            <div ref={contentRef} className="markdown-content" id="md-content-63484949">
               {/* First loop to print questions and options */}
               {result?.map((item, index) => (
-                <div key={index}>
-                  <h3>{index + 1}. {item.question} ({item.difficulty})</h3>
+                <div key={index} className="question-block">
+                  <div className="question">
+                    <h3>{index + 1}. {item.question} ({item.difficulty})</h3>
+                  </div>
                   <p>
                     {item.options.map((option, i) => (
-                      <span key={i}>
+                      <span key={i} className="option">
                         {String.fromCharCode(97 + i)}. {option} <br />
                       </span>
                     ))}
@@ -393,21 +408,21 @@ export default function YouTubePage() {
               ))}
 
               {/* Print Answers heading */}
-              <h2>Answers</h2>
+              <h2 className="answers-heading">Answers</h2>
 
               {/* Second loop to print answers and explanations */}
               {result?.map((item, index) => (
-                <div key={index}>
+                <div key={index} className="answer-block">
                   <p><strong>{index + 1}.</strong> {item.answer}</p>
                   <p><em>{item.explanation}</em></p>
                 </div>
               ))}
-            </div>
 
+            </div>
           )}
           <div className="animate-blurIn" data-tour-id="message-actions">
             <div className="flex space-x-2">
-              <button className="flex items-center border p-2 rounded-lg text-gray-700">
+              <button className="flex items-center border p-2 rounded-lg text-gray-700" onClick={handleCopy}>
                 <svg
                   className="h-5 w-5 mr-1"
                   xmlns="http://www.w3.org/2000/svg"
@@ -429,7 +444,7 @@ export default function YouTubePage() {
                 </svg>
                 Export
               </button>
-              <button className="flex items-center border p-2 rounded-lg text-gray-700">
+              <button className="flex items-center border p-2 rounded-lg text-gray-700" onClick={handleReadAloud}>
                 <svg
                   className="h-5 w-5 mr-1"
                   xmlns="http://www.w3.org/2000/svg"
@@ -439,17 +454,6 @@ export default function YouTubePage() {
                   <path d="M3 9v6h4l5 5V4L7 9zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77"></path>
                 </svg>
                 Read Aloud
-              </button>
-              <button className="flex items-center border p-2 rounded-lg text-gray-700">
-                <svg
-                  className="h-5 w-5 mr-1"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"></path>
-                </svg>
-                More
               </button>
             </div>
           </div>
