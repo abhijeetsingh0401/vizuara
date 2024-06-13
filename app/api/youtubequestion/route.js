@@ -165,6 +165,12 @@ ${transcript}
     }
 }
 
+const countWords = (transcript) => {
+    // Split the transcript by spaces and filter out any empty strings
+    const words = transcript.split(' ').filter(word => word.trim() !== '');
+    return words.length;
+};
+
 async function main(videoUrl, youtubeApiKey, openaiApiKey, gradeLevel, numQuestions, questionType, hardQuestions, mediumQuestions, easyQuestions) {
     try {
         const { videoId, captionsAvailable } = await checkTranscriptAvailability(videoUrl, youtubeApiKey);
