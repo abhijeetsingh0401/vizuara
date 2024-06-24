@@ -121,8 +121,15 @@ ${transcript}
         });
 
         let questionsText = response.choices[0].message.content.trim();
-        questionsText = questionsText.replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
+        const startIndex = questionsText.indexOf('[');
+        const endIndex = questionsText.lastIndexOf(']') + 1;
 
+        if (startIndex === -1 || endIndex === -1) {
+            throw new Error("JSON array not found in the response");
+        }
+
+        // Extract and clean the JSON array
+        questionsText = questionsText.substring(startIndex, endIndex);
         console.log("Native TEXT:", response.choices[0].message.content);
 
         console.log("Trimmerd Question:", questionsText);
