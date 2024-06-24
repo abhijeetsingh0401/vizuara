@@ -13,6 +13,14 @@ export default function Home() {
         isFav={true}
         url="/youtube" // replace with the actual URL you want to redirect to
       />
+      <Card
+        icon="/text-dependent-question.svg" // path to the icon in the public directory
+        title="Text Question"
+        description="Text Dependent Question"
+        isNew={true}
+        isFav={true}
+        url="/text-dependent-question" // replace with the actual URL you want to redirect to
+      />
     </div>
   );
 }
