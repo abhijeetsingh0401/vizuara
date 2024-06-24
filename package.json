@@ -14,9 +14,12 @@
     "jspdf": "^2.5.1",
     "next": "14.2.3",
     "openai": "^4.47.3",
+    "pdfjs-dist": "^4.3.136",
     "prop-types": "^15.8.1",
     "react": "^18",
     "react-dom": "^18",
+    "react-pdf": "^9.0.0",
+    "tesseract.js": "^5.1.0",
     "url": "^0.11.3",
     "youtube-captions-scraper": "^2.0.3"
   },
