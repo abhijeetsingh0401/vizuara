@@ -1,7 +1,10 @@
 // components/PdfUpload.js
 import React, { useState } from 'react';
-import Tesseract from 'tesseract.js';
-import * as pdfjsLib from 'pdfjs-dist/webpack';
+import dynamic from 'next/dynamic';
+
+// Dynamically import Tesseract and pdfjs-dist
+const PdfjsLib = dynamic(() => import('pdfjs-dist/webpack'), { ssr: false });
+const Tesseract = dynamic(() => import('tesseract.js'), { ssr: false });
 
 const PdfUpload = () => {
   const [text, setText] = useState('');
@@ -14,6 +17,7 @@ const PdfUpload = () => {
       const reader = new FileReader();
       reader.onload = async () => {
         const typedarray = new Uint8Array(reader.result);
+        const pdfjsLib = await PdfjsLib;
         const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
         let extractedText = '';
         for (let i = 1; i <= pdf.numPages; i++) {
