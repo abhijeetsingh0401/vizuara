@@ -1,9 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
 import { jsPDF } from "jspdf";
-import Tesseract from "tesseract.js";
-import * as pdfjsLib from "pdfjs-dist/webpack";
-import PDFTextExtractor from "@components/PdfTextExtractor";
 
 export default function TextDependentQuestion() {
   const contentRef = useRef(null);
@@ -218,10 +215,6 @@ export default function TextDependentQuestion() {
       window.speechSynthesis.speak(speech);
     }
   };
-
- return(
-    <PDFTextExtractor/>
- )
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
