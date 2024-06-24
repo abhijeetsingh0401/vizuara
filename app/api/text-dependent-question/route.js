@@ -52,7 +52,7 @@ export async function POST(request) {
 
         console.log("CONTENTS:", string(content) )
 
-        //const result = await generateQuestions(content, gradeLevel, numberOfQuestions, questionTypes, hardQuestions, mediumQuestions, easyQuestions, OpenAI_Key);
+        const result = await generateQuestions(content, gradeLevel, numberOfQuestions, questionTypes, hardQuestions, mediumQuestions, easyQuestions, OpenAI_Key);
         if (result) {
             return new Response(JSON.stringify(result), {
                 status: 200,
