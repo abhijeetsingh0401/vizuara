@@ -120,11 +120,17 @@ ${transcript}
             messages: [{ role: 'user', content: prompt }],
         });
 
-        const questionsText = response.choices[0].message.content.trim();
+        let questionsText = response.choices[0].message.content.trim();
+        questionsText = questionsText.replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
 
-        console.log("QUESTION TEXT:", questionsText)
+        console.log("Native TEXT:", response.choices[0].message.content);
 
-        return JSON.parse(questionsText);
+        console.log("Trimmerd Question:", questionsText);
+
+        const questionParse =  JSON.parse(questionsText);
+        console.log("PARSED QUESTION TEXT:", questionParse)
+
+        return questionParse;
     } catch (error) {
         console.error('Error generating questions:', error);
         return null;
