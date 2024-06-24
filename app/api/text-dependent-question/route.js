@@ -2,10 +2,35 @@ import { google } from 'googleapis';
 import { getSubtitles } from 'youtube-captions-scraper';
 import OpenAI from 'openai';
 import { parse } from 'url';
+const { createClient } = require('@supabase/supabase-js');
 import pdf from 'pdf-parse/lib/pdf-parse.js';
 import { string } from 'prop-types';
 
 const OpenAI_Key = process.env.OpenAI_Key;
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function downloadFile(filePath) {
+    try {
+        const { data, error } = await supabase
+            .storage
+            .from('pdf')
+            .download(filePath);
+
+        if (error) {
+            throw error;
+        }
+
+        return data;
+
+        console.log(`File downloaded successfully to ${savePath}`);
+    } catch (error) {
+        console.error('Error downloading PDF:', error);
+    }
+}
 
 export async function POST(request) {
     try {
