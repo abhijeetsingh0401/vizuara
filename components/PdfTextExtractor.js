@@ -1,72 +1,43 @@
-// components/PDFTextExtractor.js
-import { useState } from 'react';
-import * as pdfjsLib from 'pdfjs-dist/build/pdf';
+// components/PdfUpload.js
+import React, { useState } from 'react';
 import Tesseract from 'tesseract.js';
+import * as pdfjsLib from 'pdfjs-dist/webpack';
 
-// Set the workerSrc property of the pdfjsLib to use the worker script
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.js`;
-
-const PDFTextExtractor = () => {
-  const [file, setFile] = useState(null);
+const PdfUpload = () => {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handlePDFUpload = async (event) => {
+  const handleFileChange = async (event) => {
     const file = event.target.files[0];
-    if (file) {
-      setFile(file);
+    if (file && file.type === 'application/pdf') {
       setLoading(true);
-      const text = await extractTextFromPDF(file);
-      setText(text);
-      setLoading(false);
-    }
-  };
-
-  const extractTextFromPDF = async (file) => {
-    const loadingTask = pdfjsLib.getDocument(URL.createObjectURL(file));
-    const pdf = await loadingTask.promise;
-    const numPages = pdf.numPages;
-
-    let fullText = '';
-
-    for (let i = 1; i <= numPages; i++) {
-      const page = await pdf.getPage(i);
-      const viewport = page.getViewport({ scale: 2.0 });
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport,
-      };
-
-      await page.render(renderContext).promise;
-
-      const { data: { text } } = await Tesseract.recognize(
-        canvas,
-        'eng',
-        {
-          logger: (m) => console.log(m),
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const typedarray = new Uint8Array(reader.result);
+        const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+        let extractedText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item) => item.str).join(' ');
+          extractedText += pageText + '\n';
         }
-      );
-
-      fullText += text;
+        setText(extractedText);
+        setLoading(false);
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      alert('Please upload a PDF file.');
     }
-
-    return fullText;
   };
 
   return (
     <div>
-      <input type="file" accept="application/pdf" onChange={handlePDFUpload} />
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
+      <input type="file" accept="application/pdf" onChange={handleFileChange} />
+      {loading && <p>Loading...</p>}
+      {!loading && text && (
         <div>
-          <h2>Extracted Text</h2>
+          <h2>Extracted Text:</h2>
           <p>{text}</p>
         </div>
       )}
@@ -74,4 +45,4 @@ const PDFTextExtractor = () => {
   );
 };
 
-export default PDFTextExtractor;
+export default PdfUpload;
