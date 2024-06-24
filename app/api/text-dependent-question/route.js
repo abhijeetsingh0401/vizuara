@@ -8,9 +8,8 @@ import { string } from 'prop-types';
 
 const OpenAI_Key = process.env.OpenAI_Key;
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
+const supabaseUrl = 'https://qweybwlsnjkgrabqdeov.supabase.co';
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZXlid2xzbmprZ3JhYnFkZW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTY4MTAxOTUsImV4cCI6MjAzMjM4NjE5NX0.g2N-K16BCzJUvQEhK2rI8exFjFKPPh1CVgHjiaTyi9E";
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function downloadFile(filePath) {
