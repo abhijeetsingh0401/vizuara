@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { jsPDF } from "jspdf";
 
 export default function TextDependentQuestion() {
@@ -13,13 +13,53 @@ export default function TextDependentQuestion() {
     gradeLevel: "5th-grade",
     numberOfQuestions: 3,
     questionTypes: "",
-    videoIdOrURL: "",
     hardQuestions: 1,
     mediumQuestions: 1,
     easyQuestions: 1,
     questionText: "",
-    fileURL: "",
+    pdfText:""
   });
+
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [pdfjsLib, setPdfjsLib] = useState(null);
+
+  useEffect(() => {
+    // Dynamically import pdfjs-dist
+    import('pdfjs-dist/webpack').then((module) => {
+      setPdfjsLib(module);
+    });
+  }, []);
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      if (!pdfjsLib) {
+        console.error("PDF.js library is not loaded yet.");
+        return;
+      }
+      setLoading(true);
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const typedarray = new Uint8Array(reader.result);
+        const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+        let extractedText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item) => item.str).join(' ');
+          extractedText += pageText + '\n';
+        }
+        setText(extractedText);
+        setFormData({ ...formData, ['pdfText']: extractedText });
+        console.log("EXTRACTED DATA:", extractedText)
+        setLoading(false);
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      alert('Please upload a PDF file.');
+    }
+  };
 
   const gradeLevels = [
     { value: "5th-grade", label: "5th grade" },
@@ -216,10 +256,6 @@ export default function TextDependentQuestion() {
     }
   };
 
-  const handlePDFUpload = () =>{
-    
-  }
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       {isFormVisible ? (
@@ -235,14 +271,13 @@ export default function TextDependentQuestion() {
                   onClick={() =>
                     setFormData({
                       gradeLevel: "5th-grade",
-                      numberOfQuestions: 3,
                       questionTypes: "",
-                      videoIdOrURL: "",
+                      numberOfQuestions: 3,
                       hardQuestions: 1,
                       mediumQuestions: 1,
                       easyQuestions: 1,
                       questionText: "",
-                      fileURL: "",
+                      pdfText: "",
                     })
                   }
                 >
@@ -408,7 +443,7 @@ export default function TextDependentQuestion() {
                         type="file"
                         accept="application/pdf"
                         className="hidden"
-                        onChange={handlePDFUpload}
+                        onChange={handleFileChange}
                         required={false}
                       />
                     </label>

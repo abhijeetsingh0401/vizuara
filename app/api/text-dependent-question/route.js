@@ -35,24 +35,24 @@ export async function POST(request) {
     try {
 
         const body = await request.json();
-        const { gradeLevel, numberOfQuestions, questionTypes, hardQuestions, mediumQuestions, easyQuestions, questionText, fileURL } = body;
+        const { gradeLevel, numberOfQuestions, questionTypes, hardQuestions, mediumQuestions, easyQuestions, questionText, pdfText } = body;
 
-        console.log(gradeLevel, numberOfQuestions, hardQuestions, mediumQuestions, easyQuestions, questionTypes, questionText, fileURL);
+        console.log(gradeLevel, numberOfQuestions, hardQuestions, mediumQuestions, easyQuestions, questionTypes, questionText, pdfText);
 
-        const fileResponse = await downloadFile("keph108.pdf");
-        if (typeof fileResponse === 'string') {
-            throw fileResponse;
-        }
+        // const fileResponse = await downloadFile("keph108.pdf");
+        // if (typeof fileResponse === 'string') {
+        //     throw fileResponse;
+        // }
 
-        // Convert Blob to Buffer if necessary
-        const arrayBuffer = await fileResponse.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const pdfContent = await pdf(buffer);
-        const content = pdfContent?.text;
+        // // Convert Blob to Buffer if necessary
+        // const arrayBuffer = await fileResponse.arrayBuffer();
+        // const buffer = Buffer.from(arrayBuffer);
+        // const pdfContent = await pdf(buffer);
+        // const content = pdfContent?.text;
 
-        console.log("CONTENTS:", string(content) )
+        console.log("CONTENTS:", pdfText )
 
-        const result = await generateQuestions(content, gradeLevel, numberOfQuestions, questionTypes, hardQuestions, mediumQuestions, easyQuestions, OpenAI_Key);
+        const result = await generateQuestions(pdfText, gradeLevel, numberOfQuestions, questionTypes, hardQuestions, mediumQuestions, easyQuestions, OpenAI_Key);
         if (result) {
             return new Response(JSON.stringify(result), {
                 status: 200,
