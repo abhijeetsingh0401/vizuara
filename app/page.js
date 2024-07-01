@@ -2,6 +2,7 @@ import Image from "next/image";
 import Card from "@components/Card"
 
 export default function Home() {
+
   return (
     <div style={{ padding: "16px" }}>
       <h1>Welcome to the Home Page</h1>
