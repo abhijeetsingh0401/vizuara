@@ -11,6 +11,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.43.5",
     "dotenv": "^16.4.5",
+    "firebase": "^10.12.2",
     "googleapis": "^137.1.0",
     "jspdf": "^2.5.1",
     "next": "14.2.3",
@@ -20,6 +21,7 @@
     "prop-types": "^15.8.1",
     "react": "^18",
     "react-dom": "^18",
+    "react-firebase-hooks": "^5.1.1",
     "react-pdf": "^9.0.0",
     "supabase": "^1.178.2",
     "tesseract.js": "^5.1.0",
