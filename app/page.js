@@ -34,7 +34,7 @@ export default function Home() {
         url="/text-dependent-question" // replace with the actual URL you want to redirect to
       />
 
-      <Link href="/History">
+      <Link href="/history">
         <button>History</button>
       </Link>
     </div>
