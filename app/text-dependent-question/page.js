@@ -1,9 +1,14 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { jsPDF } from "jspdf";
+import { firestore, doc, setDoc } from '@lib/firebase'; // Import Firestore methods from your library
+import { UserContext } from '@lib/context'; // Import UserContext to get the user data
+import { useRouter } from 'next/navigation';
 
 export default function TextDependentQuestion() {
   const contentRef = useRef(null);
+  const { user, username } = useContext(UserContext); // Get user and username from UserContext
+  const router = useRouter(); // Get router from next/navigation
 
   const [isFormVisible, setIsFormVisible] = useState(true);
   const [result, setResult] = useState([]);
@@ -17,12 +22,19 @@ export default function TextDependentQuestion() {
     mediumQuestions: 1,
     easyQuestions: 1,
     questionText: "",
-    pdfText:""
+    pdfText: ""
   });
 
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [pdfjsLib, setPdfjsLib] = useState(null);
+
+  useEffect(() => {
+    // Redirect to /enter page if the user is not logged in
+    if (!user) {
+      router.push('/enter');
+    }
+  }, [user, router]);
 
   useEffect(() => {
     // Dynamically import pdfjs-dist
@@ -167,6 +179,14 @@ export default function TextDependentQuestion() {
 
       const data = await response.json();
       setResult(data);
+
+      // Save the result to Firestore along with formData using username from context
+      if (user && username) {
+        console.log("SAVING TO FIREBASE")
+        const resultDocRef = doc(firestore, `history/${username}/results/${new Date().toISOString()}`);
+        await setDoc(resultDocRef, { formData, result: data });
+      }
+
       setIsFormVisible(false);
     } catch (error) {
       console.error("Error submitting form:", error);

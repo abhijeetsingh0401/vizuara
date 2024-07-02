@@ -1,9 +1,14 @@
 'use client'
-import { useState, useRef } from "react";
+import { useState, useRef, useContext, useEffect } from "react";
 import { jsPDF } from "jspdf";
+import { firestore, doc, setDoc } from '@lib/firebase'; // Import Firestore methods from your library
+import { UserContext } from '@lib/context'; // Import UserContext to get the user data
+import { useRouter } from 'next/navigation';
 
 export default function YouTubePage() {
   const contentRef = useRef(null);
+  const { user, username } = useContext(UserContext); // Get user and username from UserContext
+  const router = useRouter(); // Get router from next/navigation
 
   const [isFormVisible, setIsFormVisible] = useState(true);
   const [result, setResult] = useState([]);
@@ -18,6 +23,13 @@ export default function YouTubePage() {
     mediumQuestions: 1,
     easyQuestions: 1,
   });
+
+  useEffect(() => {
+    // Redirect to /enter page if the user is not logged in
+    if (!user) {
+      router.push('/enter');
+    }
+  }, [user, router]);
 
   const gradeLevels = [
     { value: "5th-grade", label: "5th grade" },
@@ -127,6 +139,13 @@ export default function YouTubePage() {
 
       const data = await response.json();
       setResult(data);
+
+      if (user && username) {
+        console.log("SAVING TO FIREBASE")
+        const resultDocRef = doc(firestore, `history/${username}/results/${new Date().toISOString()}`);
+        await setDoc(resultDocRef, { formData, result: data });
+      }
+
       setIsFormVisible(false);
     } catch (error) {
       console.error("Error submitting form:", error);
