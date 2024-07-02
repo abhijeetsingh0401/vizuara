@@ -1,10 +1,21 @@
+'use client'
 import Image from "next/image";
 import Card from "@components/Card"
+import AuthCheck from "@components/AuthCheck";
+import Link from 'next/link';
 
 export default function Home() {
 
   return (
     <div style={{ padding: "16px" }}>
+      <AuthCheck
+        fallback={
+          <Link href="/enter">
+            <button>Login</button>
+          </Link>
+        }
+      >
+      </AuthCheck>
       <h1>Welcome to the Home Page</h1>
       <Card
         icon="/youtube.svg" // path to the icon in the public directory
