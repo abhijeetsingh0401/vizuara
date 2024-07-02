@@ -33,6 +33,10 @@ export default function Home() {
         isFav={true}
         url="/text-dependent-question" // replace with the actual URL you want to redirect to
       />
+
+      <Link href="/History">
+        <button>History</button>
+      </Link>
     </div>
   );
 }
