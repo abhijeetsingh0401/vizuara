@@ -17,11 +17,13 @@ export default function RootLayout({ children }) {
   const userData = useUserData();
 
   return (
-    <UserContext.Provider value={userData}>
-      <html lang="en">
-        <body className={inter.className}>{children}</body>
-      </html>
-      <Toaster />
-    </UserContext.Provider>
+    <html lang="en">
+      <body className={inter.className}>
+        <UserContext.Provider value={userData}>
+          {children}
+          <Toaster />
+        </UserContext.Provider>
+      </body>
+    </html >
   );
 }
