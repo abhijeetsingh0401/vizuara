@@ -1,15 +1,14 @@
 'use client'
 import { useState, useRef, useContext, useEffect } from "react";
 import { jsPDF } from "jspdf";
-import { firestore, doc, setDoc } from '@lib/firebase'; // Import Firestore methods from your library
+import { firestore, doc, setDoc, getDoc } from '@lib/firebase'; // Import Firestore methods from your library
 import { UserContext } from '@lib/context'; // Import UserContext to get the user data
 import { useRouter } from 'next/navigation';
 
-export default function YouTubePage() {
+export default function YouTubePage({ params }) {
   const contentRef = useRef(null);
   const { user, username } = useContext(UserContext); // Get user and username from UserContext
-  const router = useRouter(); // Get router from next/navigation
-
+  
   const [isFormVisible, setIsFormVisible] = useState(true);
   const [result, setResult] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -24,12 +23,45 @@ export default function YouTubePage() {
     easyQuestions: 1,
   });
 
-  useEffect(() => {
-    // Redirect to /enter page if the user is not logged in
-    if (!user) {
-      router.push('/enter');
-    }
-  }, [user, router]);
+  // useEffect(() => {
+  //   // Redirect to /enter page if the user is not logged in
+  //   if (!user) {
+  //     router.push('/enter');
+  //   }
+  // }, [user, router]);
+
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       if (!username || !id) return;
+
+//       const decodedTimestamp = decodeURIComponent(id);
+//       console.log("decodedTimeStamp:",decodedTimestamp)
+      
+//       try {
+//         const docRef = doc(firestore, `history/${username}/results/${decodedTimestamp}`);
+//         const docSnap = await getDoc(docRef);
+
+//         //console.log(typeof id, id)
+
+//         if (docSnap.exists()) {
+//           const data = docSnap.data();
+//           setFormData(data.formData);
+//           setResult(data.result);
+//           console.log("DATA:", data);
+//           setIsFormVisible(false)
+//         } else {
+//           console.log("No such document!");
+//         }
+//       } catch (error) {
+//         console.error("Error fetching document: ", error);
+//         setError("Failed to load data. Please try again.");
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchData();
+//   }, [username, id]);
 
   const gradeLevels = [
     { value: "5th-grade", label: "5th grade" },
@@ -157,60 +189,58 @@ export default function YouTubePage() {
 
   const handleExport = (result) => {
     const doc = new jsPDF();
-  
+
     // Initial Y position
     let yPos = 10;
-  
+
     // Add questions and options
     result.forEach((item, index) => {
       const questionText = `${index + 1}. ${item.question}`;
       const questionLines = doc.splitTextToSize(questionText, 180);
       doc.text(questionLines, 10, yPos);
       yPos += questionLines.length * 10; // Space after the question
-  
+
       item.options.forEach((option, i) => {
         const optionText = `${String.fromCharCode(97 + i)}. ${option}`;
         const optionLines = doc.splitTextToSize(optionText, 180);
         doc.text(optionLines, 20, yPos);
         yPos += optionLines.length * 10; // Space between options
       });
-  
+
       // Add extra space after each set of options
       yPos += 10;
     });
-  
+
     // Add a new page for answers
     doc.addPage();
     doc.text("Answers", 10, 10);
     yPos = 20;
-  
+
     result.forEach((item, index) => {
       const correctOptionIndex = item.options.indexOf(item.answer);
       const correctOptionText = `${index + 1}. ${String.fromCharCode(97 + correctOptionIndex)}. ${item.answer}`;
-  
+
       const correctOptionLines = doc.splitTextToSize(correctOptionText, 180);
       doc.text(correctOptionLines, 10, yPos);
       yPos += correctOptionLines.length * 10; // Space after the correct option
-  
+
       const explanationText = `Explanation: ${item.explanation}`;
       const explanationLines = doc.splitTextToSize(explanationText, 180);
       doc.text(explanationLines, 10, yPos);
       yPos += explanationLines.length * 10; // Space after the explanation
-  
+
       // Add extra space after each answer and explanation set
       yPos += 10;
-  
+
       // If yPos exceeds page height, add a new page
       if (yPos > 280) {
         doc.addPage();
         yPos = 20;
       }
     });
-  
+
     doc.save("questions_and_answers.pdf");
   };
-  
-  
 
   const handleCopy = () => {
     if (contentRef.current) {
