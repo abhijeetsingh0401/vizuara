@@ -22,8 +22,9 @@ export async function POST(request) {
 
         console.log("CONTENTS:", pdfText )
 
-        const result = await generateQuestions(pdfText, gradeLevel, numberOfQuestions, questionTypes, hardQuestions, mediumQuestions, easyQuestions, OpenAI_Key);
+        const result = await generateQuestions(questionText, gradeLevel, numberOfQuestions, 'worksheet', hardQuestions, mediumQuestions, easyQuestions, OpenAI_Key);
         if (result) {
+            console.log("RESULT:", result)
             return new Response(JSON.stringify(result), {
                 status: 200,
                 headers: {
@@ -54,26 +55,36 @@ async function generateQuestions(transcript, gradeLevel, numQuestions, questionT
     const openai = new OpenAI({ apiKey: openaiApiKey });
 
     const prompt = `
+You are an experienced educational content creator. I need you to generate a worksheet for students based on the following information:
+
+1. Grade Level: ${gradeLevel}
+2. Topic or Text: ${transcript}
+
+Please follow this exact structure and format for the response to ensure uniformity:
 Generate ${numQuestions} ${questionType} questions with correct answers for a ${gradeLevel} grade student based on the following video transcript. The questions should be divided into three categories: ${hardQuestions} hard questions, ${mediumQuestions} medium questions, and ${easyQuestions} easy questions. Provide an explanation for each question and answer. Provide the output in the following JSON format:
+
+---
+
+### Fill in the Blanks Questions
 
 [
   {
     "difficulty": "easy",
-    "question": "Question text",
+    "question": "Fill in the Blanks Questions Text",
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "answer": "Correct Option",
     "explanation": "Explanation of the correct answer"
   },
   {
     "difficulty": "medium",
-    "question": "Question text",
+    "question": "Fill in the Blanks Questions Text",
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "answer": "Correct Option",
     "explanation": "Explanation of the correct answer"
   },
   {
     "difficulty": "hard",
-    "question": "Question text",
+    "question": "Fill in the Blanks Questions Text",
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "answer": "Correct Option",
     "explanation": "Explanation of the correct answer"
@@ -86,7 +97,7 @@ ${transcript}
 
     try {
         const response = await openai.chat.completions.create({
-            model: 'gpt-4o',
+            model: 'gpt-4',
             messages: [{ role: 'user', content: prompt }],
         });
 
@@ -102,10 +113,10 @@ ${transcript}
         questionsText = questionsText.substring(startIndex, endIndex);
         console.log("Native TEXT:", response.choices[0].message.content);
 
-        console.log("Trimmerd Question:", questionsText);
+        console.log("Trimmed Question:", questionsText);
 
-        const questionParse =  JSON.parse(questionsText);
-        console.log("PARSED QUESTION TEXT:", questionParse)
+        const questionParse = JSON.parse(questionsText);
+        console.log("PARSED QUESTION TEXT:", questionParse);
 
         return questionParse;
     } catch (error) {
