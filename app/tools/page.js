@@ -40,6 +40,14 @@ export default function Home() {
                     isFav={true}
                     url="/tools/mcq" // replace with the actual URL you want to redirect to
                 />
+                <Card
+                    icon="/text-summarizer.svg" // path to the icon in the public directory
+                    title="Text summarizer"
+                    description="Text Dependent Question"
+                    isNew={true}
+                    isFav={true}
+                    url="/tools/summarizer" // replace with the actual URL you want to redirect to
+                />
             </div>
             <Link href="/history">
                 <button>History</button>
