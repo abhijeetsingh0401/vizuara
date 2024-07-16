@@ -6,11 +6,12 @@ export async function POST(request) {
     try {
 
         const body = await request.json();
-        const { lengthSummary, inputText, pdfText, } = body;
 
-        console.log(lengthSummary, inputText, pdfText);
+        const { originalText, rewriteText, pdfText } = body;
 
-        const result = await generateSummary(lengthSummary, inputText, pdfText, OpenAI_Key);
+        console.log(originalText, rewriteText, pdfText);
+
+        const result = await generateRewrite(originalText, rewriteText, pdfText, OpenAI_Key);
         if (result) {
             console.log("RESULTS:", result)
             return new Response(JSON.stringify(result), {
@@ -38,39 +39,35 @@ export async function POST(request) {
     }
 }
 
-async function generateSummarizationPrompt(lengthSummary, inputText, pdfText) {
-    let prompt = '';
+async function generateRewritePrompt(originalText, rewriteText, pdfText) {
+    let prompt = `Rewrite the following texts in the requested way:
+Original Text: ${originalText}
+Rewrite Text: ${rewriteText}`;
 
-    if (inputText && pdfText) {
-        prompt = `Summarize the following texts into ${lengthSummary}:
-Text 1: ${inputText}
-Text 2: ${pdfText}`;
-    } else if (inputText) {
-        prompt = `Summarize the following text into ${lengthSummary}: ${inputText}`;
-    } else if (pdfText) {
-        prompt = `Summarize the following PDF content into ${lengthSummary}: ${pdfText}`;
+    if (pdfText) {
+        prompt += `\nPDF Text: ${pdfText}`;
     }
 
     return prompt;
 }
 
-async function generateSummary(lengthSummary, inputText, pdfText, openaiApiKey) {
+async function generateRewrite(originalText, rewriteText, pdfText, openaiApiKey) {
     const openai = new OpenAI({ apiKey: openaiApiKey });
 
-    const summarizationPrompt = await generateSummarizationPrompt(lengthSummary, inputText, pdfText);
+    const rewritePrompt = await generateRewritePrompt(originalText, rewriteText, pdfText);
 
     try {
         const response = await openai.chat.completions.create({
             model: 'gpt-3.5-turbo',
-            messages: [{ role: 'user', content: summarizationPrompt }],
+            messages: [{ role: 'user', content: rewritePrompt }],
         });
 
-        const summary = response.choices[0].message.content.trim();
-        console.log("Generated Summary:", summary);
+        const rewrittenText = response.choices[0].message.content.trim();
+        console.log("Generated Rewrite:", rewrittenText);
 
-        return summary;
+        return rewrittenText;
     } catch (error) {
-        console.error('Error generating summary:', error);
+        console.error('Error generating rewrite:', error);
         return null;
     }
 }

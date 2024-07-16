@@ -48,6 +48,30 @@ export default function Home() {
                     isFav={true}
                     url="/tools/summarizer" // replace with the actual URL you want to redirect to
                 />
+                <Card
+                    icon="/rewrite.svg" // path to the icon in the public directory
+                    title="Text Rewriter"
+                    description="Text Rewrite"
+                    isNew={true}
+                    isFav={true}
+                    url="/tools/rewrite" // replace with the actual URL you want to redirect to
+                />
+                <Card
+                    icon="/proofreader.svg" // path to the icon in the public directory
+                    title="Proof Read"
+                    description="Proof Read"
+                    isNew={true}
+                    isFav={true}
+                    url="/tools/proofreader" // replace with the actual URL you want to redirect to
+                />
+                <Card
+                    icon="/translator.svg" // path to the icon in the public directory
+                    title="Translate Text"
+                    description="Translate Text"
+                    isNew={true}
+                    isFav={true}
+                    url="/tools/translator" // replace with the actual URL you want to redirect to
+                />
             </div>
             <Link href="/history">
                 <button>History</button>
