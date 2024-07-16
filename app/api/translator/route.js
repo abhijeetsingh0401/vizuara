@@ -1,13 +1,17 @@
+import { google } from 'googleapis';
+import axios from 'axios';
+
 export async function POST(request) {
     try {
         const body = await request.json();
         const { originalText, targetLanguage } = body;
         console.log(originalText, targetLanguage)
         //const languageCode = iso6391.getCode(targetLanguage);
-        const translatedText = await translateText(originalText, targetLanguage, await getAccessToken());
+        const token = process.env.GOOGLE_ACCESS_TOKEN;
+        console.log("TOKEN:", token)
+        const translatedText = await translateText(originalText, targetLanguage, token);
         if (translatedText) {
-            console.log("Translated Text:", translatedText);
-            return new Response(JSON.stringify({ translatedText }), {
+            return new Response(JSON.stringify(translatedText), {
                 status: 200,
                 headers: {
                     'Content-Type': 'application/json',
@@ -32,45 +36,47 @@ export async function POST(request) {
     }
 }
 
+// async function getAccessToken() {
+//     //const { google } = require('googleapis');
+//     const auth = new google.auth.GoogleAuth({
+//         credentials: {
+//             client_email: process.env.GOOGLE_CLIENT_EMAIL,
+//             private_key: process.env.GOOGLE_PRIVATE_KEY
+//         },
+//         scopes: ['https://www.googleapis.com/auth/cloud-platform', 'https://www.googleapis.com/auth/cloud-translation', 'https://www.googleapis.com/auth/cloud-platform']
+//     });
+
+//     const authClient = await auth.getClient();
+//     const accessToken = await authClient.getAccessToken();
+//     console.log("ACCESS TOKEN:", accessToken.token);
+//     return accessToken.token;
+// }
+
 async function translateText(text, targetLanguage, accessToken) {
-    const endpoint = `https://translate.googleapis.com/v3beta1/{parent=${process.env.GOOGLE_PROJECT_ID}}:translateText`;
+
+    const endpoint = `https://translation.googleapis.com/v3beta1/projects/${process.env.GOOGLE_PROJECT_ID}/locations/global:translateText`;
 
     try {
         const response = await axios.post(
             endpoint,
             {
-                q: text,
+                "contents": [
+                    text
+                ],
+                mimeType: 'text/plain',
                 targetLanguageCode: targetLanguage,
-                format: 'text',
             },
             {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                }
+                    'Content-Type': 'application/json',
+                },
             }
         );
 
-        const translatedText = response.data.data.translations[0].translatedText;
-        return translatedText;
+        return response.data.translations[0].translatedText;
     } catch (error) {
         console.error('Error translating text:', error);
         throw error;
     }
-}
-
-async function getAccessToken() {
-    const { google } = require('googleapis');
-    const auth = new google.auth.GoogleAuth({
-        credentials: {
-            client_email: process.env.GOOGLE_CLIENT_EMAIL,
-            private_key: process.env.GOOGLE_PRIVATE_KEY
-        },
-        scopes: ['https://www.googleapis.com/auth/cloud-platform']
-    });
-
-    const authClient = await auth.getClient();
-    const accessToken = await authClient.getAccessToken();
-    console.log("ACCESS TOKEN:", accessToken.token);
-    return accessToken.token;
 }

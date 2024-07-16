@@ -96,6 +96,7 @@ export default function Translator() {
             }
 
             const data = await response.json();
+            console.log("DATA:", data)
             setResult(data);
 
             // Save the result to Firestore along with formData using username from context
