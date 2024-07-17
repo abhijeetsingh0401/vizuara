@@ -31,10 +31,8 @@ export async function POST(request) {
 function generatePrompt(gradeLevel, essay) {
     return `
         Please grade the following essay written by a ${gradeLevel} student based on grammar and sentence coherence. The total marks are 10.
-
         **Essay:**
         ${essay}
-
         **Please provide detailed feedback in the following format:**
         {
             "mistakes": "...", // List specific grammatical errors and sentence coherence issues
@@ -43,7 +41,6 @@ function generatePrompt(gradeLevel, essay) {
             "weaknesses": "...", // Point out the weaknesses of the essay
             "improvements": "..." // Suggest areas for improvement with examples and tips
         }
-
         **Examples of feedback:**
         {
             "totalMarks": 5,
@@ -63,7 +60,6 @@ function generatePrompt(gradeLevel, essay) {
                 "4. Proper punctuation and capitalization."
             ]
         }
-
         Use specific examples from the essay to illustrate each point.
     `;
 }

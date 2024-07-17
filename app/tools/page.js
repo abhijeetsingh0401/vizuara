@@ -96,6 +96,14 @@ export default function Home() {
                     isFav={true}
                     url="/tools/essay-grader" // replace with the actual URL you want to redirect to
                 />
+                <Card
+                    icon="/ppt.png" // path to the icon in the public directory
+                    title="PPT Generator"
+                    description="Generate PPT"
+                    isNew={true}
+                    isFav={true}
+                    url="/tools/ppt-generator" // replace with the actual URL you want to redirect to
+                />
             </div>
             <Link href="/history">
                 <button>History</button>
