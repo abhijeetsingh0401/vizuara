@@ -5,7 +5,7 @@ import { firestore, doc, setDoc, getDoc } from '@lib/firebase'; // Import Firest
 import { UserContext } from '@lib/context'; // Import UserContext to get the user data
 import { useRouter } from 'next/navigation';
 
-export default function ReportCard({ params }) {
+export default function EssayGrader({ params }) {
     const contentRef = useRef(null);
     const { user, username } = useContext(UserContext); // Get user and username from UserContext
 
@@ -15,9 +15,7 @@ export default function ReportCard({ params }) {
     const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
         gradeLevel: "5th-grade",
-        studentPronouns: "",
-        strengths: "",
-        growths: "",
+        essay: "",
         pdfText: ""
     });
 
@@ -44,7 +42,7 @@ export default function ReportCard({ params }) {
         setError(null);
 
         try {
-            const response = await fetch("/api/report-card", {
+            const response = await fetch("/api/essay-grader", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -62,12 +60,14 @@ export default function ReportCard({ params }) {
             console.log(data)
             console.log(typeof data)
             setResult(data);
+            // const parsed = JSON.parse(data)
+            // setResult(parsed);
 
-            if (user && username) {
-                console.log("SAVING TO FIREBASE")
-                const resultDocRef = doc(firestore, `history/${username}/results/${new Date().toISOString()}`);
-                await setDoc(resultDocRef, { formData, result: data });
-            }
+            // if (user && username) {
+            //     console.log("SAVING TO FIREBASE")
+            //     const resultDocRef = doc(firestore, `history/${username}/results/${new Date().toISOString()}`);
+            //     await setDoc(resultDocRef, { formData, result: data });
+            // }
 
             setIsFormVisible(false);
         } catch (error) {
@@ -159,16 +159,14 @@ export default function ReportCard({ params }) {
                 <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-lg p-6">
                     <div className="flex flex-col space-y-6">
                         <div className="flex items-center justify-between">
-                            <h1 className="text-xl font-bold">Report Card Generator</h1>
+                            <h1 className="text-xl font-bold">Essay Grader</h1>
                             <div className="flex space-x-2">
                                 <button
                                     className="flex items-center text-blue-500"
                                     onClick={() =>
                                         setFormData({
                                             gradeLevel: "5th-grade",
-                                            studentPronouns: "",
-                                            strengths: "",
-                                            growths: "",
+                                            essay: "",
                                             pdfText: ""
                                         })
                                     }
@@ -186,9 +184,10 @@ export default function ReportCard({ params }) {
                             </div>
                         </div>
                         <p className="text-gray-600">
-                            Generate report card comments with a student's strengths and areas for growth.
+                            Essay Grader primary metrics are Grammar and Sentence coherence
                         </p>
                         <form className="space-y-4" onSubmit={handleSubmit}>
+
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-gray-700">
                                     Grade level:
@@ -211,50 +210,15 @@ export default function ReportCard({ params }) {
 
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-gray-700">
-                                    Student Pronouns:
+                                    Essay:
                                 </label>
-                                <input
-                                    type="text"
-                                    name="studentPronouns"
-                                    data-tour-id="name-studentPronouns"
-                                    required=""
-                                    placeholder="he/she/they, etc."
-                                    className="border border-gray-300 rounded-lg w-full h-16 px-2 py-2 bg-white"
-                                    value={formData.studentPronouns}
-                                    onChange={handleChange}
-                                    style={{ verticalAlign: "top", textAlign: "left" }}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Areas of Strength:
-                                </label>
-                                <input
-                                    type="text"
-                                    name="strengths"
-                                    data-tour-id="name-strengths"
-                                    required=""
-                                    placeholder="Areas to celebrate"
-                                    className="border border-gray-300 rounded-lg w-full h-16 px-2 py-2 bg-white"
-                                    value={formData.strengths}
-                                    onChange={handleChange}
-                                    style={{ verticalAlign: "top", textAlign: "left" }}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Areas for Growth:
-                                </label>
-                                <input
-                                    type="text"
-                                    name="growths"
-                                    data-tour-id="name-growths"
-                                    required=""
-                                    placeholder="Areas to improve"
-                                    className="border border-gray-300 rounded-lg w-full h-16 px-2 py-2 bg-white"
-                                    value={formData.growths}
+                                <textarea
+                                    name="essay"
+                                    data-tour-id="name-essay"
+                                    required
+                                    placeholder="Paste or write essay here"
+                                    className="border border-gray-300 rounded-lg w-full h-48 px-2 py-2 bg-white"
+                                    value={formData.essay}
                                     onChange={handleChange}
                                     style={{ verticalAlign: "top", textAlign: "left" }}
                                 />
@@ -284,10 +248,36 @@ export default function ReportCard({ params }) {
                         <div ref={contentRef} className="markdown-content" id="md-content-63484949">
                             {result && (
                                 <div>
-                                    <p><strong>Areas of Strength:</strong> {result.Strength}</p>
-                                    <p><strong>Areas of Improvements:</strong> {result.Weakness}</p>
+                                    <p><strong>Total Marks:</strong> {result.totalMarks}</p>
+
+                                    <div>
+                                        <p><strong>Mistakes:</strong></p>
+                                        <ul>
+                                            {result.mistakes.map((mistake, index) => (
+                                                <li key={index}>{mistake}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <p><strong>Strengths:</strong> {result.strengths}</p>
+                                    </div>
+
+                                    <div>
+                                        <p><strong>Weaknesses:</strong> {result.weaknesses}</p>
+                                    </div>
+
+                                    <div>
+                                        <p><strong>Areas of Improvement:</strong></p>
+                                        <ul>
+                                            {result.improvements.map((improvement, index) => (
+                                                <li key={index}>{improvement}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 </div>
                             )}
+
                         </div>
                     )}
                     <div className="animate-blurIn" data-tour-id="message-actions">
