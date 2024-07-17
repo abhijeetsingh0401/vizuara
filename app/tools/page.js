@@ -80,6 +80,14 @@ export default function Home() {
                     isFav={true}
                     url="/tools/planner" // replace with the actual URL you want to redirect to
                 />
+                <Card
+                    icon="/report-card.svg" // path to the icon in the public directory
+                    title="Report Card"
+                    description="Translate Text"
+                    isNew={true}
+                    isFav={true}
+                    url="/tools/report-card" // replace with the actual URL you want to redirect to
+                />
             </div>
             <Link href="/history">
                 <button>History</button>
