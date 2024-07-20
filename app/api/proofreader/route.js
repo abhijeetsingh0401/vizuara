@@ -1,13 +1,15 @@
 import OpenAI from 'openai';
 
 const OpenAI_Key = process.env.OpenAI_Key;
+const openai = new OpenAI({ apiKey: OpenAI_Key });
 
 export async function POST(request) {
     try {
         const body = await request.json();
         const { originalText } = body;
 
-        const result = await generateProofread(originalText, OpenAI_Key);
+        const prompt =  generateProofreadPrompt(originalText);
+        const result = await generateProofread(prompt);
         if (result) {
             console.log("RESULTS:", result);
             return new Response(JSON.stringify(result), {
@@ -35,18 +37,32 @@ export async function POST(request) {
     }
 }
 
-async function generateProofreadPrompt(text) {
-    const prompt = `Please proofread the following text for grammar, spelling, and punctuation errors. Make any necessary corrections:
+function generateProofreadPrompt(text) {
+    const prompt = `Please proofread the following text for grammar, spelling, and punctuation errors. Make any necessary corrections. Also, list the changes made along with explanations for each change:
 
-Text: ${text}`;
+Text: ${text}
+
+Format the response in JSON as follows:
+{
+  "Title": "Title for the input text context",
+  "OriginalText": {
+    "subTitle": "Original Text",
+    "array": ["Original text line 1", "Original text line 2", ...]
+  },
+  "Correct": {
+    "subTitle": "Proofread Text",
+    "array": ["Proofread text line 1", "Proofread text line 2", ...]
+  },
+  "Changes": {
+    "subTitle": "Changes Made",
+    "array": ["Change 1 explanation", "Change 2 explanation", ...]
+  }
+}`;
 
     return prompt;
 }
 
-async function generateProofread(text, openaiApiKey) {
-    const openai = new OpenAI({ apiKey: openaiApiKey });
-
-    const proofreadPrompt = await generateProofreadPrompt(text);
+async function generateProofread(proofreadPrompt) {
 
     try {
         const response = await openai.chat.completions.create({
@@ -54,10 +70,28 @@ async function generateProofread(text, openaiApiKey) {
             messages: [{ role: 'user', content: proofreadPrompt }],
         });
 
-        const proofreadText = response.choices[0].message.content.trim();
-        console.log("Proofread Text:", proofreadText);
+        let summary = response.choices[0].message.content.trim();
+        
+        if (summary.startsWith('```') && summary.endsWith('```')) {
+            console.log("CONTAINS BACK TICKS")
+            summary = summary.slice(3, -3).trim();
+        }
 
-        return proofreadText;
+        // Handle case where JSON is prefixed with "json"
+        if (summary.startsWith('json')) {
+            console.log("CONTAINS JSON PREFIX")
+            summary = summary.slice(4).trim();
+        }
+
+        // Remove potential trailing content
+        const jsonStartIndex = summary.indexOf('{');
+        const jsonEndIndex = summary.lastIndexOf('}');
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+            summary = summary.slice(jsonStartIndex, jsonEndIndex + 1).trim();
+        }
+
+        return JSON.parse(summary);
+
     } catch (error) {
         console.error('Error generating proofread text:', error);
         return null;

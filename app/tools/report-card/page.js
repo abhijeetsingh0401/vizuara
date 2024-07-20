@@ -286,8 +286,6 @@ export default function ReportCard({ params }) {
                                 )}
                             </div>
 
-
-
                             <br />
 
                             <ActionButtons contentRef={contentRef} result={result} docType={'report-card'} />
