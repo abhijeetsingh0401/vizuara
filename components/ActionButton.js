@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import jsPDF from 'jspdf';
+import toast from 'react-hot-toast';
 
-const ActionButtons = ({ contentRef, result }) => {
+const ActionButtons = ({ contentRef, result, docType }) => {
     const [isReading, setIsReading] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [speechInstance, setSpeechInstance] = useState(null);
@@ -23,66 +24,58 @@ const ActionButtons = ({ contentRef, result }) => {
         if (contentRef.current) {
             const content = contentRef.current.innerText;
             navigator.clipboard.writeText(content).then(() => {
-                alert('Content copied to clipboard');
+                toast.success('Content copied to clipboard')
             }).catch(err => {
-                console.error('Failed to copy: ', err);
+                toast.error('Failed to copy', err);
             });
         }
     };
 
-    const handleExport = (result) => {
+    const handleExport = (result, docType) => {
         const doc = new jsPDF();
-
+    
         // Initial Y position
         let yPos = 10;
-
-        // Add strengths
-        doc.text("Areas of Strength:", 10, yPos);
-        yPos += 10;
-
-        result.Strength.forEach((strength, index) => {
-            const strengthText = `${index + 1}. ${strength}`;
-            const strengthLines = doc.splitTextToSize(strengthText, 180);
-            doc.text(strengthLines, 10, yPos);
-            yPos += strengthLines.length * 10; // Space after each strength
-
-            // Add extra space if needed
-            yPos += 5;
-
-            // If yPos exceeds page height, add a new page
-            if (yPos > 280) {
-                doc.addPage();
-                yPos = 10;
+    
+        // Add title
+        if (result.Title) {
+            doc.text(result.Title, 10, yPos);
+            yPos += 20; // Add extra space after the title
+        }
+    
+        // Iterate over each key in the result object
+        Object.keys(result).forEach((key) => {
+            if (key !== 'Title' && Array.isArray(result[key]) && result[key].length > 0) {
+                // Add the section header
+                doc.text(`${key.replace(/([A-Z])/g, ' $1')}:`, 10, yPos);
+                yPos += 10;
+    
+                // Add each item in the array
+                result[key].forEach((item, index) => {
+                    const itemText = `${index + 1}. ${item}`;
+                    const itemLines = doc.splitTextToSize(itemText, 180);
+                    doc.text(itemLines, 10, yPos);
+                    yPos += itemLines.length * 10; // Space after each item
+    
+                    // Add extra space if needed
+                    yPos += 5;
+    
+                    // If yPos exceeds page height, add a new page
+                    if (yPos > 280) {
+                        doc.addPage();
+                        yPos = 10;
+                    }
+                });
+    
+                // Add extra space before the next section
+                yPos += 10;
             }
         });
-
-        // Add extra space before weaknesses
-        yPos += 10;
-
-        // Add weaknesses
-        doc.text("Areas of Improvements:", 10, yPos);
-        yPos += 10;
-
-        result.Weakness.forEach((weakness, index) => {
-            const weaknessText = `${index + 1}. ${weakness}`;
-            const weaknessLines = doc.splitTextToSize(weaknessText, 180);
-            doc.text(weaknessLines, 10, yPos);
-            yPos += weaknessLines.length * 10; // Space after each weakness
-
-            // Add extra space if needed
-            yPos += 5;
-
-            // If yPos exceeds page height, add a new page
-            if (yPos > 280) {
-                doc.addPage();
-                yPos = 10;
-            }
-        });
-
-        // Save the PDF
-        doc.save("strengths_and_weaknesses.pdf");
+    
+        // Save the PDF with a dynamic filename
+        doc.save(`${result.Title}_${docType}_report.pdf`);
     };
-
+    
     const handleReadAloud = () => {
         if (contentRef.current) {
             const content = contentRef.current.innerText;
@@ -106,6 +99,8 @@ const ActionButtons = ({ contentRef, result }) => {
         if (speechInstance) {
             window.speechSynthesis.pause();
             setIsPaused(true);
+            toast.success('Read Aloud Paused')
+
         }
     };
 
@@ -113,12 +108,14 @@ const ActionButtons = ({ contentRef, result }) => {
         if (speechInstance) {
             window.speechSynthesis.resume();
             setIsPaused(false);
+            toast.success('Read Aloud Resumed')
         }
     };
 
     const handleRestart = () => {
         window.speechSynthesis.cancel(); // Stop the current speech
         handleReadAloud(); // Restart from the beginning
+        toast.success('Read Aloud Restarted')
     };
 
     return (

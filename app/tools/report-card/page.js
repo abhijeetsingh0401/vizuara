@@ -44,20 +44,17 @@ export default function ReportCard({ params }) {
                 body: JSON.stringify(formData),
             });
 
-            console.log("formData:", formData)
-
             if (!response.ok) {
-                throw new Error("Network response was not ok");
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Unknown error occurred');
             }
 
             const data = await response.json();
-            console.log(data)
-            console.log(typeof data)
             setResult(data);
-
             toast.success('Report card generated successfully!');
-            
+
             if (user && username) {
+                console.log("SAVING TO FIREBASE");
 
                 const batch = writeBatch(firestore);
 
@@ -80,17 +77,18 @@ export default function ReportCard({ params }) {
                 // Update the document ID state only after successful operation
                 setDocId(newDocId);
 
+                toast.success('Saved report card with updated title to history!');
             }
-            
-            toast.success('Save to Histroy!');
+
             setIsFormVisible(false);
         } catch (error) {
+            console.error("Error submitting form:", error);
             toast.error(`Error: ${error.message}`);
             setIsFormVisible(true);
         } finally {
             setIsLoading(false);
         }
-    };
+    }
 
     const handleBack = () => {
         setFormData({
@@ -119,14 +117,16 @@ export default function ReportCard({ params }) {
                             <div className="flex space-x-2">
                                 <button
                                     className="flex items-center text-blue-500"
-                                    onClick={() =>
+                                    onClick={() =>{
                                         setFormData({
                                             gradeLevel: "5th-grade",
                                             studentPronouns: "",
                                             strengths: "",
                                             growths: "",
                                             pdfText: ""
-                                        })
+                                        });
+                                        setDocId(null);
+                                    }
                                     }
                                 >
                                     <svg
@@ -229,7 +229,7 @@ export default function ReportCard({ params }) {
                 </div>
             )}
 
-            {(result || isLoading || error) && (
+            {(result || isLoading) && (
                 <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-lg p-6 animate-blurIn">
                     {isLoading ? (
                         <div className="flex justify-center items-center">
@@ -275,7 +275,7 @@ export default function ReportCard({ params }) {
 
                             <br />
 
-                            <ActionButtons contentRef={contentRef} result={result} />
+                            <ActionButtons contentRef={contentRef} result={result} docType={'report-card'} />
                         </div>
                     )}
                 </div>
