@@ -144,10 +144,8 @@ export default function TextDependentQuestion() {
 
     const handleBack = () => {
         setFormData({
-            gradeLevel: "5th-grade",
-            studentPronouns: "",
-            strengths: "",
-            growths: "",
+            lengthSummary: "",
+            inputText: "",
             pdfText: ""
         });
         setIsFormVisible(true);
@@ -160,26 +158,23 @@ export default function TextDependentQuestion() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
             {isFormVisible && (
-                <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-3xl p-6">
-                    {" "}
-                    {/* Updated max-width */}
+                <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-3xl p-6 mb-6">
                     <div className="flex flex-col space-y-6">
                         <div className="flex items-center justify-between">
-                            <h1 className="text-xl font-bold">Text Dependent Questions</h1>
+                            <h1 className="text-xl font-bold">Text Summarizer</h1>
                             <div className="flex space-x-2">
                                 <button
                                     className="flex items-center text-blue-500"
-                                    onClick={() =>{
+                                    onClick={() => {
                                         setFormData({
                                             lengthSummary: "",
                                             inputText: "",
                                             pdfText: ""
                                         });
                                         setDocId(null);
-                                    }
-                                    }
+                                    }}
                                 >
                                     <svg
                                         className="h-5 w-5 mr-1"
@@ -193,9 +188,8 @@ export default function TextDependentQuestion() {
                                 </button>
                             </div>
                         </div>
-                        <p className="text-gray-600">Text Dependent Question.</p>
+                        <p className="text-gray-600">Generate a summary from the given text.</p>
                         <form className="space-y-4" onSubmit={handleSubmit}>
-
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-gray-700">
                                     Length of summary:
@@ -206,7 +200,7 @@ export default function TextDependentQuestion() {
                                     data-tour-id="name-lengthSummary"
                                     required
                                     placeholder="1 para, 1 summary, 500 words"
-                                    className="border border-gray-300 rounded-lg w-full h-16 px-2 py-2 bg-white" // Adjusted padding here
+                                    className="border border-gray-300 rounded-lg w-full h-16 px-2 py-2 bg-white"
                                     value={formData.lengthSummary}
                                     onChange={handleChange}
                                 />
@@ -221,17 +215,14 @@ export default function TextDependentQuestion() {
                                     name="inputText"
                                     data-tour-id="name-inputText"
                                     required
-                                    placeholder="Paste the original Text here"
-                                    className="border border-gray-300 rounded-lg w-full h-16 px-2 py-2 bg-white" // Adjusted padding here
+                                    placeholder="Paste the original text here"
+                                    className="border border-gray-300 rounded-lg w-full h-16 px-2 py-2 bg-white"
                                     value={formData.inputText}
                                     onChange={handleChange}
                                 />
                             </div>
 
-
-                           {/*
-                           Enter the PDF UPLOAD HERE
-                           */}
+                            {/* Enter the PDF UPLOAD HERE */}
 
                             <div>
                                 <button
@@ -247,7 +238,7 @@ export default function TextDependentQuestion() {
             )}
 
             {(result || isLoading) && (
-                <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-lg p-6 animate-blurIn">
+                <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-3xl p-6 animate-blurIn mt-6">
                     {isLoading ? (
                         <div className="flex justify-center items-center">
                             <img src='/bouncing-circles.svg' alt="Loading" className="w-16 h-16" />
@@ -263,7 +254,7 @@ export default function TextDependentQuestion() {
                                 >
                                     Back
                                 </button>
-                                <h1 className="text-xl font-bold">Report Card Generator</h1>
+                                <h1 className="text-xl font-bold">Summary Generator</h1>
                                 <button
                                     className="text-blue-500"
                                     onClick={handleEditPrompt}
@@ -286,9 +277,13 @@ export default function TextDependentQuestion() {
                                                     {result[key].subTitle && (
                                                         <div>
                                                             <p><strong>{result[key].subTitle}:</strong></p>
-                                                            {Array.isArray(result[key].array) && result[key].array.map((item, index) => (
-                                                                <p key={index} className="mb-2">{item}</p>
-                                                            ))}
+                                                            {Array.isArray(result[key].array) && result[key].array.length > 0 ? (
+                                                                result[key].array.map((item, index) => (
+                                                                    <p key={index} className="mb-2">{item}</p>
+                                                                ))
+                                                            ) : (
+                                                                <p className="mb-2">No content available.</p>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
@@ -300,13 +295,11 @@ export default function TextDependentQuestion() {
 
                             <br />
 
-                            <ActionButtons contentRef={contentRef} result={result} docType={'report-card'} />
+                            <ActionButtons contentRef={contentRef} result={result} docType={'summary'} />
                         </div>
                     )}
                 </div>
-            )} 
-
-
+            )}
         </div>
     );
 }
