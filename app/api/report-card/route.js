@@ -66,11 +66,23 @@ export const getEvaluationFromOpenAI = async (prompt) => {
         });
 
         let summary = response.choices[0].message.content.trim();
-
-        // Remove any surrounding markdown formatting
+        
         if (summary.startsWith('```') && summary.endsWith('```')) {
             console.log("CONTAINS BACK TICKS")
             summary = summary.slice(3, -3).trim();
+        }
+
+        // Handle case where JSON is prefixed with "json"
+        if (summary.startsWith('json')) {
+            console.log("CONTAINS JSON PREFIX")
+            summary = summary.slice(4).trim();
+        }
+
+        // Remove potential trailing content
+        const jsonStartIndex = summary.indexOf('{');
+        const jsonEndIndex = summary.lastIndexOf('}');
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+            summary = summary.slice(jsonStartIndex, jsonEndIndex + 1).trim();
         }
 
         return JSON.parse(summary);
