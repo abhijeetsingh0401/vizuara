@@ -28,7 +28,7 @@ export async function POST(request) {
 
 export const generateStrengthsWeaknessesPrompt = ({ gradeLevel, studentPronouns, strengths, growths }) => {
     return `
-      Generate a detailed evaluation for a student in the following details:
+      Generate a detailed evaluation for a student with the following details:
       
       Grade Level: ${gradeLevel}
       Student Pronouns: ${studentPronouns}
@@ -37,8 +37,17 @@ export const generateStrengthsWeaknessesPrompt = ({ gradeLevel, studentPronouns,
       
       Format:
       {
-        "Strength": "StrengthContent",
-        "Weakness": "WeaknessContent"
+        "Title":"Title for storage",
+        "Strength": [
+          "StrengthContent1",
+          "StrengthContent2",
+          ...
+        ],
+        "Weakness": [
+          "WeaknessContent1",
+          "WeaknessContent2",
+          ...
+        ]
       }
     `;
 };
@@ -46,7 +55,7 @@ export const generateStrengthsWeaknessesPrompt = ({ gradeLevel, studentPronouns,
 export const getEvaluationFromOpenAI = async (prompt) => {
     try {
         const response = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-4o-mini',
             messages: [{ role: 'user', content: prompt }],
         });
 

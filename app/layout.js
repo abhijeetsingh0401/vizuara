@@ -20,6 +20,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={inter.className}>
         <UserContext.Provider value={userData}>
+          <Toaster />
           {children}
           <Toaster />
         </UserContext.Provider>

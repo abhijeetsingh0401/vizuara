@@ -5,7 +5,7 @@ import { firestore, doc, setDoc, getDoc } from '@lib/firebase'; // Import Firest
 import { UserContext } from '@lib/context'; // Import UserContext to get the user data
 import { useRouter } from 'next/navigation';
 
-export default function YouTubePage({ params }) {
+export default function Planner({ params }) {
     const contentRef = useRef(null);
     const { user, username } = useContext(UserContext); // Get user and username from UserContext
 
@@ -283,18 +283,15 @@ export default function YouTubePage({ params }) {
                         <div ref={contentRef} className="markdown-content" id="md-content-63484949">
                             {result && (
                                 <div>
-                                    <h2>{result.Title}</h2>
-                                    <p><strong>Objective:</strong> {result.Objective}</p>
-                                    <p><strong>Assessment:</strong> {result.Assessment}</p>
-                                    <p><strong>Key Points:</strong> {result['Key Points']}</p>
-                                    <p><strong>Opening:</strong> {result.Opening}</p>
-                                    <p><strong>Introduction to New Material:</strong> {result['Introduction to New Material']}</p>
-                                    <p><strong>Guided Practice:</strong> {result['Guided Practice']}</p>
-                                    <p><strong>Independent Practice:</strong> {result['Independent Practice']}</p>
-                                    <p><strong>Closing:</strong> {result.Closing}</p>
-                                    <p><strong>Extension Activity:</strong> {result['Extension Activity']}</p>
-                                    <p><strong>Homework:</strong> {result.Homework}</p>
-                                    <p><strong>Standards Addressed:</strong> {result['Standards Addressed']}</p>
+                                    <h1 style={{ marginBottom: '1rem' }}> <strong>{result.Title}</strong></h1>
+                                    {Object.keys(result).map((key) =>
+                                        key !== "Title" && (
+                                            <div key={key} style={{ marginBottom: '1rem' }}>
+                                                <strong>{key.replace(/([A-Z])/g, ' $1')}:</strong>
+                                                <p>{result[key]}</p>
+                                            </div>
+                                        )
+                                    )}
                                 </div>
                             )}
                         </div>
