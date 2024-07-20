@@ -1,5 +1,3 @@
-// utils.js
-
 export const gradeLevels = [
     { value: "5th-grade", label: "5th grade" },
     { value: "6th-grade", label: "6th grade" },

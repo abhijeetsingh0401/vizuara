@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, useContext, useEffect } from "react";
-import { firestore, doc, setDoc, getDoc, writeBatch} from '@lib/firebase'; // Import Firestore methods from your library
+import { firestore, doc, setDoc, getDoc, writeBatch } from '@lib/firebase'; // Import Firestore methods from your library
 import { UserContext } from '@lib/context'; // Import UserContext to get the user data
 import { useRouter } from 'next/navigation';
 import ActionButtons from '@components/ActionButton';
@@ -50,6 +50,11 @@ export default function ReportCard({ params }) {
             }
 
             const data = await response.json();
+            // Check for valid data
+            if (!data || !data.Title || !data.Objective) {
+                toast.success('Received empty or invalid data');
+            }
+
             setResult(data);
             toast.success('Report card generated successfully!');
 
@@ -117,7 +122,7 @@ export default function ReportCard({ params }) {
                             <div className="flex space-x-2">
                                 <button
                                     className="flex items-center text-blue-500"
-                                    onClick={() =>{
+                                    onClick={() => {
                                         setFormData({
                                             gradeLevel: "5th-grade",
                                             studentPronouns: "",
@@ -260,18 +265,28 @@ export default function ReportCard({ params }) {
                             <div ref={contentRef} className="markdown-content" id="md-content-63484949">
                                 {result && (
                                     <div>
-                                        <p><strong>Areas of Strength:</strong></p>
-                                        {result.Strength && result.Strength.map((strength, index) => (
-                                            <p key={index} className="mb-2">{strength}</p>
-                                        ))}
-                                        <br />
-                                        <p><strong>Areas of Improvements:</strong></p>
-                                        {result.Weakness && result.Weakness.map((weakness, index) => (
-                                            <p key={index} className="mb-2">{weakness}</p>
-                                        ))}
+                                        {result.Title && (
+                                            <h1 style={{ marginBottom: '1rem' }}><strong>{result.Title}</strong></h1>
+                                        )}
+                                        {Object.keys(result).map((key) =>
+                                            key !== "Title" && (
+                                                <div key={key} style={{ marginBottom: '1rem' }}>
+                                                    {result[key].subTitle && (
+                                                        <div>
+                                                            <p><strong>{result[key].subTitle}:</strong></p>
+                                                            {Array.isArray(result[key].array) && result[key].array.map((item, index) => (
+                                                                <p key={index} className="mb-2">{item}</p>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )
+                                        )}
                                     </div>
                                 )}
                             </div>
+
+
 
                             <br />
 

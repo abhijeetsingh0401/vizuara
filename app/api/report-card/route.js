@@ -37,17 +37,23 @@ export const generateStrengthsWeaknessesPrompt = ({ gradeLevel, studentPronouns,
       
       Format:
       {
-        "Title":"Title for storage",
-        "Strength": [
-          "StrengthContent1",
-          "StrengthContent2",
-          ...
-        ],
-        "Weakness": [
-          "WeaknessContent1",
-          "WeaknessContent2",
-          ...
-        ]
+        "Title": "Title for storage",
+        "Strength": {
+          "subTitle": "Areas of Strength",
+          "array": [
+            "StrengthContent1",
+            "StrengthContent2",
+            ...
+          ]
+        },
+        "Weakness": {
+          "subTitle": "Areas for Growth",
+          "array": [
+            "WeaknessContent1",
+            "WeaknessContent2",
+            ...
+          ]
+        }
       }
     `;
 };
@@ -59,10 +65,15 @@ export const getEvaluationFromOpenAI = async (prompt) => {
             messages: [{ role: 'user', content: prompt }],
         });
 
-        const evaluation = response.choices[0].message.content.trim();
-        console.log("Generated Evaluation:", evaluation);
+        let summary = response.choices[0].message.content.trim();
 
-        return JSON.parse(evaluation);
+        // Remove any surrounding markdown formatting
+        if (summary.startsWith('```') && summary.endsWith('```')) {
+            console.log("CONTAINS BACK TICKS")
+            summary = summary.slice(3, -3).trim();
+        }
+
+        return JSON.parse(summary);
     } catch (error) {
         console.error('Error generating evaluation:', error);
         throw error;

@@ -4,12 +4,13 @@ const openai = new OpenAI({ apiKey: OpenAI_Key });
 
 export async function POST(request) {
 
-    const { gradeLevel, content, additionalContext, alignedStandard } = request.body;
+    const { gradeLevel, content, additionalContext, alignedStandard } = await request.json();
+    console.log(gradeLevel, content, additionalContext, alignedStandard)
 
     try {
         const prompt = generateLessonPlanPrompt({ gradeLevel, content, additionalContext, alignedStandard });
+        console.log("PROMPT:", prompt)
         const lessonPlan = await getLessonPlanFromOpenAI(prompt);
-        console.log(typeof lessonPlan)
         return new Response(JSON.stringify(lessonPlan), {
             status: 200,
             headers: {
@@ -17,7 +18,6 @@ export async function POST(request) {
             },
         });
     } catch (error) {
-        console.error("Error generating lesson plan:", error);
         return new Response(JSON.stringify({ error: 'Failed to generate lesson plan' }), {
             status: 500,
             headers: {
@@ -40,19 +40,20 @@ export const generateLessonPlanPrompt = ({ gradeLevel, content, additionalContex
       {
         "Title": "TitleContent",
         "Objective": "ObjectiveContent",
-        "Assessment": "AssessmentContent",
-        "Key Points": "KeyPointsContent",
-        "Opening": "OpeningContent",
-        "Introduction to New Material": "IntroductionToNewMaterialContent",
-        "Guided Practice": "GuidedPracticeContent",
-        "Independent Practice": "IndependentPracticeContent",
-        "Closing": "ClosingContent",
-        "Extension Activity": "ExtensionActivityContent",
-        "Homework": "HomeworkContent",
-        "Standards Addressed": "StandardsAddressedContent"
+        "Assessment": ["AssessmentContent1", "AssessmentContent2", ...],
+        "Key Points": ["Keypoint1", "Keypoint2", "Keypoint3", ...],
+        "Opening": ["OpeningContent1", "OpeningContent2", "OpeningContent3", ...],
+        "Introduction to New Material": ["IntroductionToNewMaterialContent1", "IntroductionToNewMaterialContent2", ...],
+        "Guided Practice": ["GuidedPracticeContent1", "GuidedPracticeContent2", ...],
+        "Independent Practice": ["IndependentPracticeContent1", "IndependentPracticeContent2", ...],
+        "Closing": ["ClosingContent1", "ClosingContent2", ...],
+        "Extension Activity": ["ExtensionActivityContent1", "ExtensionActivityContent2", ...],
+        "Homework": ["HomeworkContent1", "HomeworkContent2", ...],
+        "Standards Addressed": ["StandardsAddressedContent1", "StandardsAddressedContent2", ...]
       }
     `;
-  };
+};
+
 
 export const getLessonPlanFromOpenAI = async (prompt) => {
 
@@ -62,7 +63,27 @@ export const getLessonPlanFromOpenAI = async (prompt) => {
             messages: [{ role: 'user', content: prompt }],
         });
 
-        const summary = response.choices[0].message.content.trim();
+        let summary = response.choices[0].message.content.trim();
+        console.log("Generated Plan BEFORE TRIMEED:", summary);
+
+        if (summary.startsWith('```') && summary.endsWith('```')) {
+            console.log("CONTAINS BACK TICKS")
+            summary = summary.slice(3, -3).trim();
+        }
+
+        // Handle case where JSON is prefixed with "json"
+        if (summary.startsWith('json')) {
+            console.log("CONTAINS JSON PREFIX")
+            summary = summary.slice(4).trim();
+        }
+
+        // Remove potential trailing content
+        const jsonStartIndex = summary.indexOf('{');
+        const jsonEndIndex = summary.lastIndexOf('}');
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+            summary = summary.slice(jsonStartIndex, jsonEndIndex + 1).trim();
+        }
+
         console.log("Generated Plan:", summary);
 
         return JSON.parse(summary);

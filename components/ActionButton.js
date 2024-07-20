@@ -45,30 +45,68 @@ const ActionButtons = ({ contentRef, result, docType }) => {
     
         // Iterate over each key in the result object
         Object.keys(result).forEach((key) => {
-            if (key !== 'Title' && Array.isArray(result[key]) && result[key].length > 0) {
-                // Add the section header
-                doc.text(`${key.replace(/([A-Z])/g, ' $1')}:`, 10, yPos);
-                yPos += 10;
-    
-                // Add each item in the array
-                result[key].forEach((item, index) => {
-                    const itemText = `${index + 1}. ${item}`;
-                    const itemLines = doc.splitTextToSize(itemText, 180);
+            if (key !== 'Title') {
+                // Check if the value is a string and handle accordingly
+                if (typeof result[key] === 'string') {
+                    // Add the section header and value for string type
+                    doc.text(`${key.replace(/([A-Z])/g, ' $1')}:`, 10, yPos);
+                    yPos += 10;
+                    const itemLines = doc.splitTextToSize(result[key], 180);
                     doc.text(itemLines, 10, yPos);
-                    yPos += itemLines.length * 10; // Space after each item
+                    yPos += itemLines.length * 10 + 5; // Space after the string value
+                } 
+                // Check if the value is an object with subTitle and array
+                else if (result[key].subTitle && Array.isArray(result[key].array) && result[key].array.length > 0) {
+                    // Add the section header
+                    doc.text(result[key].subTitle, 10, yPos);
+                    yPos += 10;
     
-                    // Add extra space if needed
-                    yPos += 5;
+                    // Add each item in the array
+                    result[key].array.forEach((item, index) => {
+                        const itemText = `${index + 1}. ${item}`;
+                        const itemLines = doc.splitTextToSize(itemText, 180);
+                        doc.text(itemLines, 10, yPos);
+                        yPos += itemLines.length * 10; // Space after each item
     
-                    // If yPos exceeds page height, add a new page
-                    if (yPos > 280) {
-                        doc.addPage();
-                        yPos = 10;
-                    }
-                });
+                        // Add extra space if needed
+                        yPos += 5;
     
-                // Add extra space before the next section
-                yPos += 10;
+                        // If yPos exceeds page height, add a new page
+                        if (yPos > 280) {
+                            doc.addPage();
+                            yPos = 10;
+                        }
+                    });
+    
+                    // Add extra space before the next section
+                    yPos += 10;
+                }
+                // Check if the value is an array and handle accordingly
+                else if (Array.isArray(result[key]) && result[key].length > 0) {
+                    // Add the section header
+                    doc.text(`${key.replace(/([A-Z])/g, ' $1')}:`, 10, yPos);
+                    yPos += 10;
+    
+                    // Add each item in the array
+                    result[key].forEach((item, index) => {
+                        const itemText = `${index + 1}. ${item}`;
+                        const itemLines = doc.splitTextToSize(itemText, 180);
+                        doc.text(itemLines, 10, yPos);
+                        yPos += itemLines.length * 10; // Space after each item
+    
+                        // Add extra space if needed
+                        yPos += 5;
+    
+                        // If yPos exceeds page height, add a new page
+                        if (yPos > 280) {
+                            doc.addPage();
+                            yPos = 10;
+                        }
+                    });
+    
+                    // Add extra space before the next section
+                    yPos += 10;
+                }
             }
         });
     
@@ -184,7 +222,7 @@ const ActionButtons = ({ contentRef, result, docType }) => {
                         </button>
                     </>
                 )}
-                <button className="flex items-center border p-2 rounded-lg text-gray-700" onClick={() => handleExport(result)}>
+                <button className="flex items-center border p-2 rounded-lg text-gray-700" onClick={() => handleExport(result,docType)}>
                     <svg
                         className="h-5 w-5 mr-1"
                         xmlns="http://www.w3.org/2000/svg"
