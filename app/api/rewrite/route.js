@@ -41,13 +41,18 @@ export async function POST(request) {
 
 async function generateRewritePrompt(originalText, rewriteText, pdfText) {
     let prompt = `Rewrite the following texts in the requested way:
-Original Text: ${originalText}
-Rewrite Text: ${rewriteText}`;
+Original Text: ${originalText}`;
 
     if (pdfText) {
         prompt += `\nPDF Text: ${pdfText}`;
     }
 
+    prompt += `\nRewrite Text: ${rewriteText}\nFormat the response as JSON with the following structure:
+{
+  "Title": "Title Based on Context of the originalText",
+  "OriginalText": { "subTitle": "Original Text", "array": ["Sentence 1", "Sentence 2", ...] },
+  "ReWrite": { "subTitle": "Rewritten Text", "array": ["Rewritten Sentence 1", "Rewritten Sentence 2", ...] }
+}`;
     return prompt;
 }
 
@@ -62,10 +67,28 @@ async function generateRewrite(originalText, rewriteText, pdfText, openaiApiKey)
             messages: [{ role: 'user', content: rewritePrompt }],
         });
 
-        const rewrittenText = response.choices[0].message.content.trim();
-        console.log("Generated Rewrite:", rewrittenText);
+        let summary = response.choices[0].message.content.trim();
+        
+        if (summary.startsWith('```') && summary.endsWith('```')) {
+            console.log("CONTAINS BACK TICKS")
+            summary = summary.slice(3, -3).trim();
+        }
 
-        return rewrittenText;
+        // Handle case where JSON is prefixed with "json"
+        if (summary.startsWith('json')) {
+            console.log("CONTAINS JSON PREFIX")
+            summary = summary.slice(4).trim();
+        }
+
+        // Remove potential trailing content
+        const jsonStartIndex = summary.indexOf('{');
+        const jsonEndIndex = summary.lastIndexOf('}');
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+            summary = summary.slice(jsonStartIndex, jsonEndIndex + 1).trim();
+        }
+
+        return JSON.parse(summary);
+
     } catch (error) {
         console.error('Error generating rewrite:', error);
         return null;

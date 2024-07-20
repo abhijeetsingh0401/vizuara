@@ -63,7 +63,7 @@ const ActionButtons = ({ contentRef, result, docType }) => {
     
                     // Add each item in the array
                     result[key].array.forEach((item, index) => {
-                        const itemText = `${index + 1}. ${item}`;
+                        const itemText = `${item}`;
                         const itemLines = doc.splitTextToSize(itemText, 180);
                         doc.text(itemLines, 10, yPos);
                         yPos += itemLines.length * 10; // Space after each item
@@ -89,7 +89,7 @@ const ActionButtons = ({ contentRef, result, docType }) => {
     
                     // Add each item in the array
                     result[key].forEach((item, index) => {
-                        const itemText = `${index + 1}. ${item}`;
+                        const itemText = `${item}`;
                         const itemLines = doc.splitTextToSize(itemText, 180);
                         doc.text(itemLines, 10, yPos);
                         yPos += itemLines.length * 10; // Space after each item
