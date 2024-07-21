@@ -10,7 +10,7 @@ export async function POST(request) {
         const { lengthSummary, inputText, pdfText, } = body;
 
         console.log(lengthSummary, inputText, pdfText);
-        const summarizationPrompt = await generateSummarizationPrompt(lengthSummary, inputText, pdfText);
+        const summarizationPrompt = await generateSummarizationPrompt(lengthSummary, inputText);
         const result = await generateSummary(summarizationPrompt);
         if (result) {
             console.log("RESULTS:", result)
@@ -94,8 +94,7 @@ The output should be in the following format:
     return prompt;
 }
 
-
-async function generateSummary(summarizationPrompt,) {
+async function generateSummary(summarizationPrompt) {
 
     try {
         const response = await openai.chat.completions.create({

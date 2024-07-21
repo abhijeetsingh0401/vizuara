@@ -81,7 +81,7 @@ export default function TextDependentQuestion() {
         setError(null);
 
         try {
-            const response = await fetch("/api/summarizer", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/text-summarizer`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -103,7 +103,6 @@ export default function TextDependentQuestion() {
             console.log(data)
 
             setResult(data);
-            toast.success('Report card generated successfully!');
 
             if (user && username) {
                 console.log("SAVING TO FIREBASE");
@@ -126,10 +125,15 @@ export default function TextDependentQuestion() {
                 // Commit the batch operation
                 await batch.commit();
 
+                if(docId){
+                    toast.success('Updated Text Summary saved to history!');
+                }else{
+                    toast.success('Generated text Summary saved to history!');
+                }
+
                 // Update the document ID state only after successful operation
                 setDocId(newDocId);
 
-                toast.success('Generated Questions saved to history!');
             }
 
             setIsFormVisible(false);
