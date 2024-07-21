@@ -34,17 +34,16 @@ export const generatePPTContentPrompt = (topic) => {
       Format:
       {
         "Title": "Presentation Title",
-        "Slides": [
-          {
-            "Title": "Slide 1 Title",
-            "Content": "Slide 1 Content"
-          },
-          {
-            "Title": "Slide 2 Title",
-            "Content": "Slide 2 Content"
-          },
+        "Slides1":{
+            "subTitle": "Slide 1 Title",
+            "array": [Slide 1 Content, Slide 1 Content, Slide 1 Content, ... , ...]}
+          "Slides2":{
+            "subTitle": "Slide 2 Title",
+            "array": [Slide 2 Content, Slide 2 Content, Slide 2 Content, ... , ...]},
+          "Slides3":{
+            "subTitle": "Slide 3 Title",
+            "array": [Slide 3 Content, Slide 3 Content, Slide 3 Content, ... , ...]}
           ...
-        ]
       }
     `;
 };
