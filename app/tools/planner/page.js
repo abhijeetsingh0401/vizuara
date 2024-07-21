@@ -30,14 +30,16 @@ export default function Planner({ params }) {
     };
 
     const handleSubmit = async (event) => {
+
+        console.log("DOCID:", docId)
+
         event.preventDefault();
         setIsLoading(true);
         setIsFormVisible(false);
         setError(null);
 
         try {
-            console.log("FROM DATA:", formData)
-            const response = await fetch("/api/planner", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/lesson-planner`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -56,7 +58,7 @@ export default function Planner({ params }) {
             }
 
             setResult(data);
-            toast.success('Report card generated successfully!');
+            toast.success('Lesson Plan generated successfully!');
 
             if (user && username) {
                 console.log("SAVING TO FIREBASE");
@@ -79,10 +81,15 @@ export default function Planner({ params }) {
                 // Commit the batch operation
                 await batch.commit();
 
+                if(docId){
+                    toast.success('Updated Generated Plan to history!');
+                }else{
+                    toast.success('Saved Generated Plan to history!');
+                }
+
                 // Update the document ID state only after successful operation
                 setDocId(newDocId);
 
-                toast.success('Saved report card with updated title to history!');
             }
 
             setIsFormVisible(false);

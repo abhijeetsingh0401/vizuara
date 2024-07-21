@@ -177,7 +177,7 @@ export default function TextDependentQuestion() {
         // Update the document ID state only after successful operation
         setDocId(newDocId);
 
-        toast.success('Saved report card with updated title to history!');
+        toast.success('Generated question saved to history!');
       }
 
       setIsFormVisible(false);

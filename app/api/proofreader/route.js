@@ -42,7 +42,7 @@ function generateProofreadPrompt(text) {
 
 Text: ${text}
 
-Format the response in JSON as follows:
+Format: JSON
 {
   "Title": "Title for the input text context",
   "OriginalText": {
@@ -68,6 +68,7 @@ async function generateProofread(proofreadPrompt) {
         const response = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [{ role: 'user', content: proofreadPrompt }],
+            response_format: { type: "json_object" },
         });
 
         let summary = response.choices[0].message.content.trim();

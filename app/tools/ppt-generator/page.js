@@ -32,7 +32,7 @@ export default function PPTGenerator({ params }) {
         setError(null);
 
         try {
-            const response = await fetch("/api/ppt-generator", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/ppt-generator`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -52,7 +52,6 @@ export default function PPTGenerator({ params }) {
             }
 
             setResult(data);
-            toast.success('PPT generated successfully!');
 
             const pptx = new PptxGenJS();
             pptx.addSlide().addText(data.Title, { x: 1, y: 1, fontSize: 24 });
@@ -97,10 +96,14 @@ export default function PPTGenerator({ params }) {
                 // Commit the batch operation
                 await batch.commit();
 
+                if(docId){
+                    toast.success('Updated Generated PPT to history!');
+                }else{
+                    toast.success('Saved Generated PPT to history!');
+                }
+
                 // Update the document ID state only after successful operation
                 setDocId(newDocId);
-
-                toast.success('Saved PPT to history!');
             }
 
             setIsFormVisible(false);

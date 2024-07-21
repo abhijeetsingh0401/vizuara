@@ -35,7 +35,7 @@ export const generateStrengthsWeaknessesPrompt = ({ gradeLevel, studentPronouns,
       Strengths: ${strengths}
       Areas for Growth: ${growths}
       
-      Format:
+      Format: json
       {
         "Title": "Title for storage",
         "Strength": {
@@ -63,6 +63,7 @@ export const getEvaluationFromOpenAI = async (prompt) => {
         const response = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [{ role: 'user', content: prompt }],
+            response_format: {"type": "json_object"},
         });
 
         let summary = response.choices[0].message.content.trim();

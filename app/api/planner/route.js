@@ -36,7 +36,7 @@ export const generateLessonPlanPrompt = ({ gradeLevel, content, additionalContex
       ${additionalContext ? `Additional Context: ${additionalContext}` : ""}
       ${alignedStandard ? `Standards Set to Align to: ${alignedStandard}` : ""}
   
-      Format:
+      Format: json
       {
         "Title": "TitleContent",
         "Objective": "ObjectiveContent",
@@ -61,6 +61,7 @@ export const getLessonPlanFromOpenAI = async (prompt) => {
         const response = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [{ role: 'user', content: prompt }],
+            response_format: { type: "json_object" },
         });
 
         let summary = response.choices[0].message.content.trim();

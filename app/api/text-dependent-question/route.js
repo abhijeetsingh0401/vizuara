@@ -44,7 +44,7 @@ function generateQuestionsPrompt(gradeLevel, numberOfQuestions, hardQuestions, m
     let prompt = `
 Generate ${numberOfQuestions} ${questionTypes} questions with correct answers for a ${gradeLevel} grade student. The questions should be divided into three categories: ${hardQuestions} hard questions, ${mediumQuestions} medium questions, and ${easyQuestions} easy questions. Provide an explanation for each question and answer. Provide the output in the following JSON format:
 
-Format:
+Format: json
 [
   {
     "difficulty": "easy",
@@ -82,12 +82,12 @@ ${pdfText}`;
     return prompt;
 }
 
-
 async function generateQuestions(prompt) {
     try {
         const response = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [{ role: 'user', content: prompt }],
+            response_format: { type: "json_object" },
         });
 
         let summary = response.choices[0].message.content.trim();

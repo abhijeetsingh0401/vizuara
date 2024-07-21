@@ -57,7 +57,7 @@ export default function EssayGrader({ params }) {
             }
 
             setResult(data);
-            toast.success('Report card generated successfully!');
+            toast.success('Essay Suggestion generated successfully!');
 
             if (user && username) {
                 console.log("SAVING TO FIREBASE");
@@ -83,7 +83,7 @@ export default function EssayGrader({ params }) {
                 // Update the document ID state only after successful operation
                 setDocId(newDocId);
 
-                toast.success('Saved report card with updated title to history!');
+                toast.success('Saved Essay Suggestion to history!');
             }
 
             setIsFormVisible(false);

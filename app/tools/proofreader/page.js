@@ -81,7 +81,7 @@ export default function Rewrite() {
         setError(null);
 
         try {
-            const response = await fetch('/api/proofreader', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/proof-reader`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -104,8 +104,6 @@ export default function Rewrite() {
 
             setResult(data);
 
-            toast.success('Report card generated successfully!');
-
             // Save the result to Firestore along with formData using username from context
             if (user && username) {
                 console.log('SAVING TO FIREBASE');
@@ -127,10 +125,15 @@ export default function Rewrite() {
                 // Commit the batch operation
                 await batch.commit();
 
+                if(docId){
+                    toast.success('Updated Proof Reader Result saved to history!');
+                }else{
+                    toast.success('Generated Proof Reader Result saved to history!');
+                }
+
                 // Update the document ID state only after successful operation
                 setDocId(newDocId);
 
-                toast.success('Result saved to history!');
             }
 
             setIsFormVisible(false);

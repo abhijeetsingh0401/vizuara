@@ -31,7 +31,7 @@ export const generatePPTContentPrompt = (topic) => {
     return `
       Generate a detailed presentation outline on the following topic: ${topic}
       
-      Format:
+      Format: json
       {
         "Title": "Presentation Title",
         "Slides1":{
@@ -53,6 +53,7 @@ export const getPPTContentFromOpenAI = async (prompt) => {
         const response = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [{ role: 'user', content: prompt }],
+            response_format: { type: "json_object" },
         });
 
         const content = response.choices[0].message.content.trim();

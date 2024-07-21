@@ -36,7 +36,7 @@ export default function ReportCard({ params }) {
         setError(null);
 
         try {
-            const response = await fetch("/api/report-card", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/report-card`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -51,7 +51,7 @@ export default function ReportCard({ params }) {
 
             const data = await response.json();
             // Check for valid data
-            if (!data || !data.Title || !data.Objective) {
+            if (!data || !data.Title) {
                 toast.success('Received empty or invalid data');
             }
 
@@ -76,17 +76,22 @@ export default function ReportCard({ params }) {
                     batch.delete(oldResultDocRef);
                 }
 
+                if (docId) {
+                    toast.success('Updated Generated Report Card to History!');
+                } else {
+                    toast.success('Saved Generated Report Card to History!');
+                }
                 // Commit the batch operation
                 await batch.commit();
 
                 // Update the document ID state only after successful operation
                 setDocId(newDocId);
 
-                toast.success('Saved report card with updated title to history!');
             }
 
             setIsFormVisible(false);
         } catch (error) {
+            console.log("FORM DATA:", formData)
             console.error("Error submitting form:", error);
             toast.error(`Error: ${error.message}`);
             setIsFormVisible(true);
