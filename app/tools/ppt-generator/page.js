@@ -52,7 +52,7 @@ export default function PPTGenerator({ params }) {
             }
 
             setResult(data);
-            toast.success('Report card generated successfully!');
+            toast.success('PPT generated successfully!');
 
             const pptx = new PptxGenJS();
             pptx.addSlide().addText(data.Title, { x: 1, y: 1, fontSize: 24 });
@@ -100,7 +100,7 @@ export default function PPTGenerator({ params }) {
                 // Update the document ID state only after successful operation
                 setDocId(newDocId);
 
-                toast.success('Saved report card with updated title to history!');
+                toast.success('Saved PPT to history!');
             }
 
             setIsFormVisible(false);
@@ -205,7 +205,7 @@ export default function PPTGenerator({ params }) {
                                 >
                                     Back
                                 </button>
-                                <h1 className="text-xl font-bold">Report Card Generator</h1>
+                                <h1 className="text-xl font-bold">PPT Generator</h1>
                                 <button
                                     className="text-blue-500"
                                     onClick={handleEditPrompt}
