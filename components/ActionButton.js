@@ -33,16 +33,81 @@ const ActionButtons = ({ contentRef, result, docType }) => {
 
     const handleExport = (result, docType) => {
         const doc = new jsPDF();
-    
+
         // Initial Y position
         let yPos = 20; // Start with some padding at the top
-    
+
         // Add title
         if (result.Title) {
             doc.text(result.Title, 20, yPos);
             yPos += 20; // Add extra space after the title
         }
-    
+
+        // Check if Questions key exists
+        // Check if Questions key exists
+        if (result.Questions) {
+            // Print "Questions" header
+            doc.text("Questions", 20, yPos);
+            yPos += 10;
+
+            // Iterate over the questions
+            result.Questions.forEach((item, index) => {
+                // Print difficulty and question
+                const questionLines = doc.splitTextToSize(`${index + 1}. ${item.question} (${item.difficulty})`, 170);
+                doc.text(questionLines, 20, yPos);
+                yPos += questionLines.length * 10;
+
+                // Print options
+                item.options.forEach((option, optionIndex) => {
+                    doc.text(`${String.fromCharCode(97 + optionIndex)}. ${option}`, 30, yPos);
+                    yPos += 10;
+
+                    // If yPos exceeds page height, add a new page
+                    if (yPos > 270) { // Adjusted for bottom padding
+                        doc.addPage();
+                        yPos = 20; // Reset yPos with top padding
+                    }
+                });
+
+                // Add extra space before the next question
+                yPos += 5;
+
+                // If yPos exceeds page height, add a new page
+                if (yPos > 270) { // Adjusted for bottom padding
+                    doc.addPage();
+                    yPos = 20; // Reset yPos with top padding
+                }
+            });
+
+            // Add extra space before "Answers" section
+            yPos += 10;
+
+            // Print "Answers" header
+            doc.text("Answers", 20, yPos);
+            yPos += 10;
+
+            // Iterate over the questions again for answers
+            result.Questions.forEach((item, index) => {
+                // Print answer and explanation
+                doc.text(`${index + 1}. Correct Answer: ${item.answer}`, 20, yPos);
+                yPos += 10;
+
+                const explanationLines = doc.splitTextToSize(`Explanation: ${item.explanation}`, 170); // 180 -> 170 for padding
+                doc.text(explanationLines, 20, yPos);
+                yPos += explanationLines.length * 10 + 5; // Space after the explanation
+
+                // If yPos exceeds page height, add a new page
+                if (yPos > 270) { // Adjusted for bottom padding
+                    doc.addPage();
+                    yPos = 20; // Reset yPos with top padding
+                }
+            });
+
+            // Return early to avoid processing further keys
+            doc.save(`${result.Title}_${docType}_report.pdf`);
+            return;
+        }
+
         // Iterate over each key in the result object
         Object.keys(result).forEach((key) => {
             if (key !== 'Title') {
@@ -55,7 +120,7 @@ const ActionButtons = ({ contentRef, result, docType }) => {
                     doc.text(itemLines, 20, yPos);
                     yPos += itemLines.length * 10 + 5; // Space after the string value
                 }
-    
+
                 // Handle the case where the key is "totalMarks" or "marks"
                 if (key === "totalMarks" || key === "marks") {
                     // Add the section header and the array beside it
@@ -67,24 +132,24 @@ const ActionButtons = ({ contentRef, result, docType }) => {
                     // Add the section header
                     doc.text(result[key].subTitle, 20, yPos);
                     yPos += 10;
-    
+
                     // Add each item in the array
                     result[key].array.forEach((item) => {
                         const itemText = `${item}`;
                         const itemLines = doc.splitTextToSize(itemText, 170); // 180 -> 170 for padding
                         doc.text(itemLines, 20, yPos);
                         yPos += itemLines.length * 10; // Space after each item
-    
+
                         // Add extra space if needed
                         yPos += 5;
-    
+
                         // If yPos exceeds page height, add a new page
                         if (yPos > 270) { // Adjusted for bottom padding
                             doc.addPage();
                             yPos = 20; // Reset yPos with top padding
                         }
                     });
-    
+
                     // Add extra space before the next section
                     yPos += 10;
                 }
@@ -93,34 +158,34 @@ const ActionButtons = ({ contentRef, result, docType }) => {
                     // Add the section header
                     doc.text(`${key.replace(/([A-Z])/g, ' $1')}:`, 20, yPos);
                     yPos += 10;
-    
+
                     // Add each item in the array
                     result[key].forEach((item) => {
                         const itemText = `${item}`;
                         const itemLines = doc.splitTextToSize(itemText, 170); // 180 -> 170 for padding
                         doc.text(itemLines, 20, yPos);
                         yPos += itemLines.length * 10; // Space after each item
-    
+
                         // Add extra space if needed
                         yPos += 5;
-    
+
                         // If yPos exceeds page height, add a new page
                         if (yPos > 270) { // Adjusted for bottom padding
                             doc.addPage();
                             yPos = 20; // Reset yPos with top padding
                         }
                     });
-    
+
                     // Add extra space before the next section
                     yPos += 10;
                 }
             }
         });
-    
+
         // Save the PDF with a dynamic filename
         doc.save(`${result.Title}_${docType}_report.pdf`);
     };
-    
+
 
     const handleReadAloud = () => {
         if (contentRef.current) {

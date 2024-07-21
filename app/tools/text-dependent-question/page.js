@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useContext } from "react";
 import { jsPDF } from "jspdf";
-import { firestore, doc, setDoc } from '@lib/firebase'; // Import Firestore methods from your library
+import { firestore, doc, setDoc, writeBatch } from '@lib/firebase'; // Import Firestore methods from your library
 import { UserContext } from '@lib/context'; // Import UserContext to get the user data
 import { useRouter } from 'next/navigation';
 import ActionButtons from '@components/ActionButton';
@@ -131,7 +131,7 @@ export default function TextDependentQuestion() {
     setError(null);
 
     try {
-      const response = await fetch("/api/text-dependent-question", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/text-dependent-question`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -146,12 +146,12 @@ export default function TextDependentQuestion() {
 
       const data = await response.json();
       // Check for valid data
-      if (!data || !data.Title || !data.Objective) {
+      if (!data || !data.Title) {
         toast.success('Received empty or invalid data');
       }
 
       setResult(data);
-      toast.success('Report card generated successfully!');
+      console.log("DATA:", data)
 
       if (user && username) {
         console.log("SAVING TO FIREBASE");
@@ -174,10 +174,15 @@ export default function TextDependentQuestion() {
         // Commit the batch operation
         await batch.commit();
 
+        if (docId) {
+          toast.success('Updated question saved to history!');
+        } else {
+          toast.success('Generated question saved to history!');
+        }
+
         // Update the document ID state only after successful operation
         setDocId(newDocId);
 
-        toast.success('Generated question saved to history!');
       }
 
       setIsFormVisible(false);
@@ -448,7 +453,7 @@ export default function TextDependentQuestion() {
                 >
                   Back
                 </button>
-                <h1 className="text-xl font-bold">Report Card Generator</h1>
+                <h1 className="text-xl font-bold">Text Dependent Question</h1>
                 <button
                   className="text-blue-500"
                   onClick={handleEditPrompt}
@@ -462,23 +467,29 @@ export default function TextDependentQuestion() {
               <div ref={contentRef} className="markdown-content" id="md-content-63484949">
                 {result && (
                   <div>
-                    {result.Title && (
-                      <h1 style={{ marginBottom: '1rem' }}><strong>{result.Title}</strong></h1>
-                    )}
-                    {Object.keys(result).map((key) =>
-                      key !== "Title" && (
-                        <div key={key} style={{ marginBottom: '1rem' }}>
-                          {result[key].subTitle && (
-                            <div>
-                              <p><strong>{result[key].subTitle}:</strong></p>
-                              {Array.isArray(result[key].array) && result[key].array.map((item, index) => (
-                                <p key={index} className="mb-2">{item}</p>
-                              ))}
-                            </div>
-                          )}
+                    <h2 className="text-xl font-bold mb-4">{result.Title}</h2>
+
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Questions</h3>
+                      {result.Questions.map((item, index) => (
+                        <div key={index} className="mb-4">
+                          <p className="text-gray-700"><strong>{index + 1}. {item.question} ({item.difficulty})</strong></p>
+                          {item.options.map((option, optionIndex) => (
+                            <p key={optionIndex} className="ml-4">{String.fromCharCode(97 + optionIndex)}. {option}</p>
+                          ))}
                         </div>
-                      )
-                    )}
+                      ))}
+                    </div>
+
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Answers</h3>
+                      {result.Questions.map((item, index) => (
+                        <div key={index} className="mb-4">
+                          <p className="text-gray-700"><strong>{index + 1}. Correct Answer: {item.answer}</strong></p>
+                          <p className="text-gray-700"><em>Explanation: {item.explanation}</em></p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
