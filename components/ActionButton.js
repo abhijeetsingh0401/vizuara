@@ -35,11 +35,11 @@ const ActionButtons = ({ contentRef, result, docType }) => {
         const doc = new jsPDF();
     
         // Initial Y position
-        let yPos = 10;
+        let yPos = 20; // Start with some padding at the top
     
         // Add title
         if (result.Title) {
-            doc.text(result.Title, 10, yPos);
+            doc.text(result.Title, 20, yPos);
             yPos += 20; // Add extra space after the title
         }
     
@@ -49,32 +49,39 @@ const ActionButtons = ({ contentRef, result, docType }) => {
                 // Check if the value is a string and handle accordingly
                 if (typeof result[key] === 'string') {
                     // Add the section header and value for string type
-                    doc.text(`${key.replace(/([A-Z])/g, ' $1')}:`, 10, yPos);
+                    doc.text(`${key.replace(/([A-Z])/g, ' $1')}:`, 20, yPos);
                     yPos += 10;
-                    const itemLines = doc.splitTextToSize(result[key], 180);
-                    doc.text(itemLines, 10, yPos);
+                    const itemLines = doc.splitTextToSize(result[key], 170); // 180 -> 170 for padding
+                    doc.text(itemLines, 20, yPos);
                     yPos += itemLines.length * 10 + 5; // Space after the string value
-                } 
+                }
+    
+                // Handle the case where the key is "totalMarks" or "marks"
+                if (key === "totalMarks" || key === "marks") {
+                    // Add the section header and the array beside it
+                    doc.text(`${result[key].subTitle}: ${result[key].array}`, 20, yPos);
+                    yPos += 15;
+                }
                 // Check if the value is an object with subTitle and array
                 else if (result[key].subTitle && Array.isArray(result[key].array) && result[key].array.length > 0) {
                     // Add the section header
-                    doc.text(result[key].subTitle, 10, yPos);
+                    doc.text(result[key].subTitle, 20, yPos);
                     yPos += 10;
     
                     // Add each item in the array
-                    result[key].array.forEach((item, index) => {
+                    result[key].array.forEach((item) => {
                         const itemText = `${item}`;
-                        const itemLines = doc.splitTextToSize(itemText, 180);
-                        doc.text(itemLines, 10, yPos);
+                        const itemLines = doc.splitTextToSize(itemText, 170); // 180 -> 170 for padding
+                        doc.text(itemLines, 20, yPos);
                         yPos += itemLines.length * 10; // Space after each item
     
                         // Add extra space if needed
                         yPos += 5;
     
                         // If yPos exceeds page height, add a new page
-                        if (yPos > 280) {
+                        if (yPos > 270) { // Adjusted for bottom padding
                             doc.addPage();
-                            yPos = 10;
+                            yPos = 20; // Reset yPos with top padding
                         }
                     });
     
@@ -84,23 +91,23 @@ const ActionButtons = ({ contentRef, result, docType }) => {
                 // Check if the value is an array and handle accordingly
                 else if (Array.isArray(result[key]) && result[key].length > 0) {
                     // Add the section header
-                    doc.text(`${key.replace(/([A-Z])/g, ' $1')}:`, 10, yPos);
+                    doc.text(`${key.replace(/([A-Z])/g, ' $1')}:`, 20, yPos);
                     yPos += 10;
     
                     // Add each item in the array
-                    result[key].forEach((item, index) => {
+                    result[key].forEach((item) => {
                         const itemText = `${item}`;
-                        const itemLines = doc.splitTextToSize(itemText, 180);
-                        doc.text(itemLines, 10, yPos);
+                        const itemLines = doc.splitTextToSize(itemText, 170); // 180 -> 170 for padding
+                        doc.text(itemLines, 20, yPos);
                         yPos += itemLines.length * 10; // Space after each item
     
                         // Add extra space if needed
                         yPos += 5;
     
                         // If yPos exceeds page height, add a new page
-                        if (yPos > 280) {
+                        if (yPos > 270) { // Adjusted for bottom padding
                             doc.addPage();
-                            yPos = 10;
+                            yPos = 20; // Reset yPos with top padding
                         }
                     });
     
@@ -114,6 +121,7 @@ const ActionButtons = ({ contentRef, result, docType }) => {
         doc.save(`${result.Title}_${docType}_report.pdf`);
     };
     
+
     const handleReadAloud = () => {
         if (contentRef.current) {
             const content = contentRef.current.innerText;
@@ -222,7 +230,7 @@ const ActionButtons = ({ contentRef, result, docType }) => {
                         </button>
                     </>
                 )}
-                <button className="flex items-center border p-2 rounded-lg text-gray-700" onClick={() => handleExport(result,docType)}>
+                <button className="flex items-center border p-2 rounded-lg text-gray-700" onClick={() => handleExport(result, docType)}>
                     <svg
                         className="h-5 w-5 mr-1"
                         xmlns="http://www.w3.org/2000/svg"

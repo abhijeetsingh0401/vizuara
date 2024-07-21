@@ -1,16 +1,6 @@
-import { google } from 'googleapis';
-import { getSubtitles } from 'youtube-captions-scraper';
 import OpenAI from 'openai';
-import { parse } from 'url';
-const { createClient } = require('@supabase/supabase-js');
-import pdf from 'pdf-parse/lib/pdf-parse.js';
-import { string } from 'prop-types';
-
 const OpenAI_Key = process.env.OpenAI_Key;
-
-const supabaseUrl = 'https://qweybwlsnjkgrabqdeov.supabase.co';
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZXlid2xzbmprZ3JhYnFkZW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTY4MTAxOTUsImV4cCI6MjAzMjM4NjE5NX0.g2N-K16BCzJUvQEhK2rI8exFjFKPPh1CVgHjiaTyi9E";
-const supabase = createClient(supabaseUrl, supabaseKey);
+const openai = new OpenAI({ apiKey: OpenAI_Key });
 
 export async function POST(request) {
     try {
@@ -20,9 +10,9 @@ export async function POST(request) {
 
         console.log(gradeLevel, numberOfQuestions, hardQuestions, mediumQuestions, easyQuestions, questionTypes, questionText, pdfText);
 
-        console.log("CONTENTS:", pdfText )
+        const prompt = generateQuestionsPrompt(gradeLevel, numberOfQuestions, hardQuestions, mediumQuestions, easyQuestions, questionTypes, questionText,  pdfText);
 
-        const result = await generateQuestions(pdfText, gradeLevel, numberOfQuestions, questionTypes, hardQuestions, mediumQuestions, easyQuestions, OpenAI_Key);
+        const result = await generateQuestions(prompt);
         if (result) {
             return new Response(JSON.stringify(result), {
                 status: 200,
@@ -38,7 +28,7 @@ export async function POST(request) {
                 },
             });
         }
-        
+
     } catch (error) {
         console.error('Error in POST handler:', error);
         return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
@@ -50,12 +40,11 @@ export async function POST(request) {
     }
 }
 
-async function generateQuestions(transcript, gradeLevel, numQuestions, questionType, hardQuestions, mediumQuestions, easyQuestions, openaiApiKey) {
-    const openai = new OpenAI({ apiKey: openaiApiKey });
+function generateQuestionsPrompt(gradeLevel, numberOfQuestions, hardQuestions, mediumQuestions, easyQuestions, questionTypes, questionText, pdfText) {
+    let prompt = `
+Generate ${numberOfQuestions} ${questionTypes} questions with correct answers for a ${gradeLevel} grade student. The questions should be divided into three categories: ${hardQuestions} hard questions, ${mediumQuestions} medium questions, and ${easyQuestions} easy questions. Provide an explanation for each question and answer. Provide the output in the following JSON format:
 
-    const prompt = `
-Generate ${numQuestions} ${questionType} questions with correct answers for a ${gradeLevel} grade student based on the following video transcript. The questions should be divided into three categories: ${hardQuestions} hard questions, ${mediumQuestions} medium questions, and ${easyQuestions} easy questions. Provide an explanation for each question and answer. Provide the output in the following JSON format:
-
+Format:
 [
   {
     "difficulty": "easy",
@@ -80,34 +69,50 @@ Generate ${numQuestions} ${questionType} questions with correct answers for a ${
   }
 ]
 
-Transcript:
-${transcript}
-`;
+Text:
+${questionText}`;
 
+    if (pdfText) {
+        prompt += `
+        
+Transcript:
+${pdfText}`;
+    }
+
+    return prompt;
+}
+
+
+async function generateQuestions(prompt) {
     try {
         const response = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [{ role: 'user', content: prompt }],
         });
 
-        let questionsText = response.choices[0].message.content.trim();
-        const startIndex = questionsText.indexOf('[');
-        const endIndex = questionsText.lastIndexOf(']') + 1;
+        let summary = response.choices[0].message.content.trim();
+        console.log(summary)
 
-        if (startIndex === -1 || endIndex === -1) {
-            throw new Error("JSON array not found in the response");
+        if (summary.startsWith('```') && summary.endsWith('```')) {
+            console.log("CONTAINS BACK TICKS")
+            summary = summary.slice(3, -3).trim();
         }
 
-        // Extract and clean the JSON array
-        questionsText = questionsText.substring(startIndex, endIndex);
-        console.log("Native TEXT:", response.choices[0].message.content);
+        // Handle case where JSON is prefixed with "json"
+        if (summary.startsWith('json')) {
+            console.log("CONTAINS JSON PREFIX")
+            summary = summary.slice(4).trim();
+        }
 
-        console.log("Trimmerd Question:", questionsText);
+        // Remove potential trailing content
+        const jsonStartIndex = summary.indexOf('{');
+        const jsonEndIndex = summary.lastIndexOf('}');
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+            summary = summary.slice(jsonStartIndex, jsonEndIndex + 1).trim();
+        }
 
-        const questionParse =  JSON.parse(questionsText);
-        console.log("PARSED QUESTION TEXT:", questionParse)
+        return JSON.parse(summary);
 
-        return questionParse;
     } catch (error) {
         console.error('Error generating questions:', error);
         return null;

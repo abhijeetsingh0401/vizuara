@@ -34,35 +34,50 @@ function generatePrompt(gradeLevel, essay) {
         **Essay:**
         ${essay}
         **Please provide detailed feedback in the following format:**
-        {
-            "mistakes": "...", // List specific grammatical errors and sentence coherence issues
-            "totalMarks": ..., // Provide a score out of 10
-            "strengths": "...", // Highlight the strengths of the essay
-            "weaknesses": "...", // Point out the weaknesses of the essay
-            "improvements": "..." // Suggest areas for improvement with examples and tips
-        }
-        **Examples of feedback:**
-        {
-            "totalMarks": 5,
-            "mistakes": [
-                "Incorrect verb tense usage (e.g., goes instead of went, bring instead of brought).",
-                "Lack of proper punctuation and capitalization.",
-                "Subject-verb agreement errors (e.g., 'My sister bring' instead of 'My sister brought').",
-                "Unclear sentence structures affecting readability."
-            ],
-            "strengths": "The student has good ideas and a clear topic. They show enthusiasm for their vacation, which makes the essay engaging.",
-            "weaknesses": "Frequent grammar errors and a lack of sentence variety. The essay also lacks proper punctuation and capitalization in several places.",
-            "improvements": [
-                "The student should focus on:",
-                "1. Proper verb tense usage.",
-                "2. Correct sentence structures to enhance clarity.",
-                "3. Using a variety of sentences to make the essay more engaging.",
-                "4. Proper punctuation and capitalization."
-            ]
+        {   
+            "Title": "Title based on the Essay Context",
+            "totalMarks": {subTitle:"Total Marks", array["10"]} // this is fixed 
+             "marks": {
+                "subTitle": "Obtained Marks",
+                 array[] // "marks": 5 // Example mark, should be dynamically calculated based on the essay, should only contain single element
+                },
+            "mistakes": {
+                "subTitle": "Mistakes",
+                "array": [
+                    "Incorrect verb tense usage (e.g., goes instead of went, bring instead of brought).",
+                    "Lack of proper punctuation and capitalization.",
+                    "Subject-verb agreement errors (e.g., 'My sister bring' instead of 'My sister brought').",
+                    "Unclear sentence structures affecting readability."
+                ]
+            },
+            "strengths": {
+                "subTitle": "Strengths",
+                "array": [
+                    "The student has good ideas and a clear topic.",
+                    "They show enthusiasm for their vacation, which makes the essay engaging."
+                ]
+            },
+            "weaknesses": {
+                "subTitle": "Weaknesses",
+                "array": [
+                    "Frequent grammar errors and a lack of sentence variety.",
+                    "The essay also lacks proper punctuation and capitalization in several places."
+                ]
+            },
+            "improvements": {
+                "subTitle": "Improvements",
+                "array": [
+                    "Proper verb tense usage.",
+                    "Correct sentence structures to enhance clarity.",
+                    "Using a variety of sentences to make the essay more engaging.",
+                    "Proper punctuation and capitalization."
+                ]
+            }
         }
         Use specific examples from the essay to illustrate each point.
     `;
 }
+
 
 // Function to call the OpenAI API with the prompt
 async function getEvaluationFromOpenAI(prompt) {
@@ -72,9 +87,30 @@ async function getEvaluationFromOpenAI(prompt) {
             messages: [{ role: 'user', content: prompt }],
         });
 
-        const essayFeedback = response.choices[0].message.content.trim();
-        console.log("essayFeedback:", essayFeedback)
-        return JSON.parse(essayFeedback);
+        let summary = response.choices[0].message.content.trim();
+
+        console.log("SUMMARY:", summary)
+        
+        if (summary.startsWith('```') && summary.endsWith('```')) {
+            console.log("CONTAINS BACK TICKS")
+            summary = summary.slice(3, -3).trim();
+        }
+
+        // Handle case where JSON is prefixed with "json"
+        if (summary.startsWith('json')) {
+            console.log("CONTAINS JSON PREFIX")
+            summary = summary.slice(4).trim();
+        }
+
+        // Remove potential trailing content
+        const jsonStartIndex = summary.indexOf('{');
+        const jsonEndIndex = summary.lastIndexOf('}');
+        if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+            summary = summary.slice(jsonStartIndex, jsonEndIndex + 1).trim();
+        }
+
+        return JSON.parse(summary);
+        
     } catch (error) {
         console.error('Error generating questions:', error);
         return null;
