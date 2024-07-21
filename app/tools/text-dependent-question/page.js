@@ -485,7 +485,7 @@ export default function TextDependentQuestion() {
 
               <br />
 
-              <ActionButtons contentRef={contentRef} result={result} docType={'report-card'} />
+              <ActionButtons contentRef={contentRef} result={result} docType={'text-dependent-question'} />
             </div>
           )}
         </div>

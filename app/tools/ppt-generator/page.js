@@ -256,7 +256,7 @@ export default function PPTGenerator({ params }) {
 
                             <br />
 
-                            <ActionButtons contentRef={contentRef} result={result} docType={'report-card'} />
+                            <ActionButtons contentRef={contentRef} result={result} docType={'ppt-generator'} />
                         </div>
                     )}
                 </div>

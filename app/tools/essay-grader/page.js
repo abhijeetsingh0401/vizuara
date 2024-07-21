@@ -268,7 +268,7 @@ export default function EssayGrader({ params }) {
 
                             <br />
 
-                            <ActionButtons contentRef={contentRef} result={result} docType={'report-card'} />
+                            <ActionButtons contentRef={contentRef} result={result} docType={'essay-grader'} />
                         </div>
                     )}
                 </div>
