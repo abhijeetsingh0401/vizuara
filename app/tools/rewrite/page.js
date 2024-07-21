@@ -82,7 +82,7 @@ export default function Rewrite({ params }) {
         setError(null);
 
         try {
-            const response = await fetch("/api/rewrite", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/rewrite`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -98,8 +98,6 @@ export default function Rewrite({ params }) {
 
             const data = await response.json();
             setResult(data);
-
-            toast.success('Text rewritten successfully!');
 
             if (user && username) {
                 console.log("SAVING TO FIREBASE");
@@ -118,9 +116,13 @@ export default function Rewrite({ params }) {
 
                 await batch.commit();
 
-                setDocId(newDocId);
+                if(docId){
+                    toast.success('Re-written text updated to history!');
+                }else{
+                    toast.success('Re-written text saved to history!');
+                }
 
-                toast.success('Saved rewritten text with updated title to history!');
+                setDocId(newDocId);
             }
 
             setIsFormVisible(false);

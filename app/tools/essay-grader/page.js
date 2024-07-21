@@ -36,7 +36,7 @@ export default function EssayGrader({ params }) {
         setError(null);
 
         try {
-            const response = await fetch("/api/essay-grader", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/essay-grader`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -57,7 +57,6 @@ export default function EssayGrader({ params }) {
             }
 
             setResult(data);
-            toast.success('Essay Suggestion generated successfully!');
 
             if (user && username) {
                 console.log("SAVING TO FIREBASE");
@@ -80,10 +79,15 @@ export default function EssayGrader({ params }) {
                 // Commit the batch operation
                 await batch.commit();
 
+                if(docId){
+                    toast.success('Updated Essay Suggestions to history!');
+                }else{
+                    toast.success('Saved Essay Suggestions to history!');
+                }
+
                 // Update the document ID state only after successful operation
                 setDocId(newDocId);
 
-                toast.success('Saved Essay Suggestion to history!');
             }
 
             setIsFormVisible(false);
