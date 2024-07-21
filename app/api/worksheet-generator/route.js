@@ -1,16 +1,6 @@
-import { google } from 'googleapis';
-import { getSubtitles } from 'youtube-captions-scraper';
 import OpenAI from 'openai';
-import { parse } from 'url';
-const { createClient } = require('@supabase/supabase-js');
-import pdf from 'pdf-parse/lib/pdf-parse.js';
-import { string } from 'prop-types';
 
 const OpenAI_Key = process.env.OpenAI_Key;
-
-const supabaseUrl = 'https://qweybwlsnjkgrabqdeov.supabase.co';
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3ZXlid2xzbmprZ3JhYnFkZW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTY4MTAxOTUsImV4cCI6MjAzMjM4NjE5NX0.g2N-K16BCzJUvQEhK2rI8exFjFKPPh1CVgHjiaTyi9E";
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(request) {
     try {
