@@ -102,7 +102,7 @@ export default function WorksheetGenerator({ params }) {
             }
 
             setResult(data);
-            toast.success('Report card generated successfully!');
+            console.log("DATA:", data)
 
             if (user && username) {
                 console.log("SAVING TO FIREBASE");

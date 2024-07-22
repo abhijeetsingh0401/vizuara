@@ -36,6 +36,9 @@ const ActionButtons = ({ contentRef, result, docType }) => {
 
         // Initial Y position
         let yPos = 20; // Start with some padding at the top
+        const padding = 20;
+        const maxYPos = doc.internal.pageSize.height - padding;
+    
 
         // Add title
         if (result.Title) {
@@ -45,93 +48,91 @@ const ActionButtons = ({ contentRef, result, docType }) => {
 
         // Check if Questions key exists
         
-        if (result.Questions) {
-            // Print "Questions" header
-            doc.text("Questions", padding, yPos);
-            yPos += 10;
-        
-            // Iterate over the questions
-            result.Questions.forEach((item, index) => {
-                // Print difficulty and question
-                const questionLines = doc.splitTextToSize(`${index + 1}. ${item.question} (${item.difficulty})`, doc.internal.pageSize.width - 2 * padding);
-        
-                questionLines.forEach((line) => {
-                    // If yPos exceeds page height minus 30, add a new page
-                    if (yPos > maxYPos - 30) {
-                        doc.addPage();
-                        yPos = padding; // Reset yPos with top padding
-                    }
-                    doc.text(line, padding, yPos);
-                    yPos += 10;
-                });
-        
-                // Print options
-                item.options.forEach((option, optionIndex) => {
-                    // If yPos exceeds page height minus 30, add a new page
-                    if (yPos > maxYPos - 30) {
-                        doc.addPage();
-                        yPos = padding; // Reset yPos with top padding
-                    }
-                    doc.text(`${String.fromCharCode(97 + optionIndex)}. ${option}`, padding + 10, yPos);
-                    yPos += 10;
-                });
-        
-                // Add extra space before the next question
-                yPos += 10;
-        
-                // If yPos exceeds page height minus 30, add a new page
-                if (yPos > maxYPos - 30) {
-                    doc.addPage();
-                    yPos = padding; // Reset yPos with top padding
-                }
-            });
-        
-            // Add extra space before "Answers" section
-            yPos += 20;
-        
-            // Print "Answers" header
-            doc.text("Answers", padding, yPos);
-            yPos += 10;
-        
-            // Iterate over the questions again for answers
-            result.Questions.forEach((item, index) => {
-                // Print answer
-                if (yPos > maxYPos - 30) {
-                    doc.addPage();
-                    yPos = padding; // Reset yPos with top padding
-                }
-                doc.text(`${index + 1}. Correct Answer: ${item.answer}`, padding, yPos);
-                yPos += 10;
-        
-                const explanationLines = doc.splitTextToSize(`Explanation: ${item.explanation}`, doc.internal.pageSize.width - 2 * padding);
-                explanationLines.forEach((line) => {
-                    // If yPos exceeds page height minus 30, add a new page
-                    if (yPos > maxYPos - 30) {
-                        doc.addPage();
-                        yPos = padding; // Reset yPos with top padding
-                    }
-                    doc.text(line, padding, yPos);
-                    yPos += 10;
-                });
-        
-                // Add extra space before the next answer
-                yPos += 10;
-        
-                // If yPos exceeds page height minus 30, add a new page
-                if (yPos > maxYPos - 30) {
-                    doc.addPage();
-                    yPos = padding; // Reset yPos with top padding
-                }
-            });
-        
-            // Save the PDF and return early to avoid processing further keys
-            doc.save(`${result.Title}_${docType}_report.pdf`);
-            return;
-        }
-        
-        
-    
+    // Check if Questions key exists
+    if (result.Questions) {
+        // Print "Questions" header
+        doc.text("Questions", padding, yPos);
+        yPos += 10;
 
+        // Iterate over the questions
+        result.Questions.forEach((item, index) => {
+            // Print difficulty and question
+            const questionLines = doc.splitTextToSize(`${index + 1}. ${item.question} (${item.difficulty})`, doc.internal.pageSize.width - 2 * padding);
+
+            questionLines.forEach((line) => {
+                // If yPos exceeds page height minus 30, add a new page
+                if (yPos > maxYPos - 30) {
+                    doc.addPage();
+                    yPos = padding; // Reset yPos with top padding
+                }
+                doc.text(line, padding, yPos);
+                yPos += 10;
+            });
+
+            // Print options
+            item.options.forEach((option, optionIndex) => {
+                // If yPos exceeds page height minus 30, add a new page
+                if (yPos > maxYPos - 30) {
+                    doc.addPage();
+                    yPos = padding; // Reset yPos with top padding
+                }
+                doc.text(`${String.fromCharCode(97 + optionIndex)}. ${option}`, padding + 10, yPos);
+                yPos += 10;
+            });
+
+            // Add extra space before the next question
+            yPos += 10;
+
+            // If yPos exceeds page height minus 30, add a new page
+            if (yPos > maxYPos - 30) {
+                doc.addPage();
+                yPos = padding; // Reset yPos with top padding
+            }
+        });
+
+        // Add extra space before "Answers" section
+        yPos += 20;
+
+        // Print "Answers" header
+        doc.text("Answers", padding, yPos);
+        yPos += 10;
+
+        // Iterate over the questions again for answers
+        result.Questions.forEach((item, index) => {
+            // Print answer
+            if (yPos > maxYPos - 30) {
+                doc.addPage();
+                yPos = padding; // Reset yPos with top padding
+            }
+            doc.text(`${index + 1}. Correct Answer: ${item.answer}`, padding, yPos);
+            yPos += 10;
+
+            const explanationLines = doc.splitTextToSize(`Explanation: ${item.explanation}`, doc.internal.pageSize.width - 2 * padding);
+            explanationLines.forEach((line) => {
+                // If yPos exceeds page height minus 30, add a new page
+                if (yPos > maxYPos - 30) {
+                    doc.addPage();
+                    yPos = padding; // Reset yPos with top padding
+                }
+                doc.text(line, padding, yPos);
+                yPos += 10;
+            });
+
+            // Add extra space before the next answer
+            yPos += 10;
+
+            // If yPos exceeds page height minus 30, add a new page
+            if (yPos > maxYPos - 30) {
+                doc.addPage();
+                yPos = padding; // Reset yPos with top padding
+            }
+        });
+
+        // Save the PDF and return early to avoid processing further keys
+        doc.save(`${result.Title}_${docType}_report.pdf`);
+        return;
+    }
+        
         // Iterate over each key in the result object
         Object.keys(result).forEach((key) => {
             if (key !== 'Title') {

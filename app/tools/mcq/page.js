@@ -1,16 +1,20 @@
 'use client'
 import { useState, useRef, useContext, useEffect } from "react";
 import { jsPDF } from "jspdf";
-import { firestore, doc, setDoc, getDoc } from '@lib/firebase'; // Import Firestore methods from your library
+import { firestore, doc, setDoc, getDoc, writeBatch } from '@lib/firebase'; // Import Firestore methods from your library
 import { UserContext } from '@lib/context'; // Import UserContext to get the user data
 import { useRouter } from 'next/navigation';
+import ActionButtons from '@components/ActionButton';
+import { gradeLevels, numberOfQuestions } from '@utils/utils'; // Import gradeLevels from utils
+import toast from 'react-hot-toast';
+
 
 export default function YouTubePage({ params }) {
     const contentRef = useRef(null);
     const { user, username } = useContext(UserContext); // Get user and username from UserContext
 
     const [isFormVisible, setIsFormVisible] = useState(true);
-    const [result, setResult] = useState([]);
+    const [result, setResult] = useState();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [formData, setFormData] = useState({
@@ -23,40 +27,7 @@ export default function YouTubePage({ params }) {
         questionText: "",
         pdfText: ""
     });
-
-    const gradeLevels = [
-        { value: "5th-grade", label: "5th grade" },
-        { value: "6th-grade", label: "6th grade" },
-        { value: "7th-grade", label: "7th grade" },
-        { value: "8th-grade", label: "8th grade" },
-        { value: "9th-grade", label: "9th grade" },
-        { value: "10th-grade", label: "10th grade" },
-        { value: "11th-grade", label: "11th grade" },
-        { value: "12th-grade", label: "12th grade" },
-    ];
-
-    const numberOfQuestions = [
-        { value: 1, label: "1" },
-        { value: 2, label: "2" },
-        { value: 3, label: "3" },
-        { value: 4, label: "4" },
-        { value: 5, label: "5" },
-        { value: 6, label: "6" },
-        { value: 7, label: "7" },
-        { value: 8, label: "8" },
-        { value: 9, label: "9" },
-        { value: 10, label: "10" },
-        { value: 11, label: "11" },
-        { value: 12, label: "12" },
-        { value: 13, label: "13" },
-        { value: 14, label: "14" },
-        { value: 15, label: "15" },
-        { value: 16, label: "16" },
-        { value: 17, label: "17" },
-        { value: 18, label: "18" },
-        { value: 19, label: "19" },
-        { value: 20, label: "20" }
-    ];
+    const [docId, setDocId] = useState(null); // State to store the document ID
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -109,8 +80,9 @@ export default function YouTubePage({ params }) {
         setIsFormVisible(false);
         setError(null);
 
+        console.log("FORM DATA:", formData)
         try {
-            const response = await fetch("/api/mcq", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/mcq-generator`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -118,108 +90,86 @@ export default function YouTubePage({ params }) {
                 body: JSON.stringify(formData),
             });
 
-            console.log("formData:", formData)
-
             if (!response.ok) {
-                throw new Error("Network response was not ok");
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Unknown error occurred');
             }
 
             const data = await response.json();
+            // Check for valid data
+            console.log("DATA:", data)
+            if (!data || !data.Title) {
+                toast.success('Received empty or invalid data');
+            }
+
             setResult(data);
+            console.log("DATA:", data)
 
             if (user && username) {
-                console.log("SAVING TO FIREBASE")
-                const resultDocRef = doc(firestore, `history/${username}/results/${new Date().toISOString()}`);
-                await setDoc(resultDocRef, { formData, result: data });
+                console.log("SAVING TO FIREBASE");
+
+                const batch = writeBatch(firestore);
+
+                // Use the existing docId if it exists, otherwise generate a new one
+                const newDocId = `${data.Title}:${new Date().toISOString()}`;
+                const newResultDocRef = doc(firestore, `history/${username}/results/${newDocId}`);
+
+                // Create the new document
+                batch.set(newResultDocRef, { formData, result: data });
+
+                // Delete the old document if docId exists
+                if (docId) {
+                    const oldResultDocRef = doc(firestore, `history/${username}/results/${docId}`);
+                    batch.delete(oldResultDocRef);
+                }
+
+                if (docId) {
+                    toast.success('Updated Generated Report Card to History!');
+                } else {
+                    toast.success('Saved Generated Report Card to History!');
+                }
+                // Commit the batch operation
+                await batch.commit();
+
+                // Update the document ID state only after successful operation
+                setDocId(newDocId);
+
             }
 
             setIsFormVisible(false);
         } catch (error) {
+            console.log("FORM DATA:", formData)
             console.error("Error submitting form:", error);
-            setError("Failed to load questions. Please try again.");
+            toast.error(`Error: ${error.message}`);
+            setIsFormVisible(true);
         } finally {
             setIsLoading(false);
         }
+    }
+
+    const handleBack = () => {
+        setFormData({
+            gradeLevel: "5th-grade",
+            numberOfQuestions: 3,
+            questionTypes: "MCQ",
+            hardQuestions: 1,
+            mediumQuestions: 1,
+            easyQuestions: 1,
+            questionText: "",
+            pdfText: ""
+        })
+        setIsFormVisible(true);
+        setResult(null);
+        setDocId(null);
     };
 
-    const handleExport = (result) => {
-        const doc = new jsPDF();
-
-        // Initial Y position
-        let yPos = 10;
-
-        // Add questions and options
-        result.forEach((item, index) => {
-            const questionText = `${index + 1}. ${item.question}`;
-            const questionLines = doc.splitTextToSize(questionText, 180);
-            doc.text(questionLines, 10, yPos);
-            yPos += questionLines.length * 10; // Space after the question
-
-            item.options.forEach((option, i) => {
-                const optionText = `${String.fromCharCode(97 + i)}. ${option}`;
-                const optionLines = doc.splitTextToSize(optionText, 180);
-                doc.text(optionLines, 20, yPos);
-                yPos += optionLines.length * 10; // Space between options
-            });
-
-            // Add extra space after each set of options
-            yPos += 10;
-        });
-
-        // Add a new page for answers
-        doc.addPage();
-        doc.text("Answers", 10, 10);
-        yPos = 20;
-
-        result.forEach((item, index) => {
-            const correctOptionIndex = item.options.indexOf(item.answer);
-            const correctOptionText = `${index + 1}. ${String.fromCharCode(97 + correctOptionIndex)}. ${item.answer}`;
-
-            const correctOptionLines = doc.splitTextToSize(correctOptionText, 180);
-            doc.text(correctOptionLines, 10, yPos);
-            yPos += correctOptionLines.length * 10; // Space after the correct option
-
-            const explanationText = `Explanation: ${item.explanation}`;
-            const explanationLines = doc.splitTextToSize(explanationText, 180);
-            doc.text(explanationLines, 10, yPos);
-            yPos += explanationLines.length * 10; // Space after the explanation
-
-            // Add extra space after each answer and explanation set
-            yPos += 10;
-
-            // If yPos exceeds page height, add a new page
-            if (yPos > 280) {
-                doc.addPage();
-                yPos = 20;
-            }
-        });
-
-        doc.save("questions_and_answers.pdf");
-    };
-
-    const handleCopy = () => {
-        if (contentRef.current) {
-            const content = contentRef.current.innerText;
-            navigator.clipboard.writeText(content).then(() => {
-                alert('Content copied to clipboard');
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
-            });
-        }
-    };
-
-    const handleReadAloud = () => {
-        if (contentRef.current) {
-            const content = contentRef.current.innerText;
-            const speech = new SpeechSynthesisUtterance(content);
-            speech.lang = 'en-US'; // Set the language
-            window.speechSynthesis.speak(speech);
-        }
+    const handleEditPrompt = () => {
+        setIsFormVisible(true);
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            {isFormVisible ? (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 space-y-6">
+            {isFormVisible && (
                 <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-lg p-6">
                     <div className="flex flex-col space-y-6">
                         <div className="flex items-center justify-between">
@@ -227,7 +177,7 @@ export default function YouTubePage({ params }) {
                             <div className="flex space-x-2">
                                 <button
                                     className="flex items-center text-blue-500"
-                                    onClick={() =>
+                                    onClick={() => {
                                         setFormData({
                                             gradeLevel: "5th-grade",
                                             numberOfQuestions: 3,
@@ -237,7 +187,9 @@ export default function YouTubePage({ params }) {
                                             easyQuestions: 1,
                                             questionText: "",
                                             pdfText: ""
-                                        })
+                                        });
+                                        setDocId(null);
+                                    }
                                     }
                                 >
                                     <svg
@@ -263,7 +215,7 @@ export default function YouTubePage({ params }) {
                                 <select
                                     name="gradeLevel"
                                     data-tour-id="name-gradeLevel"
-                                    required=""
+                                    required
                                     className="border border-gray-300 rounded-lg w-full h-10 px-2 bg-white"
                                     value={formData.gradeLevel}
                                     onChange={handleChange}
@@ -282,7 +234,7 @@ export default function YouTubePage({ params }) {
                                 <select
                                     name="numberOfQuestions"
                                     data-tour-id="name-numberOfQuestions"
-                                    required=""
+                                    required
                                     className="border border-gray-300 rounded-lg w-full h-10 px-2 bg-white"
                                     value={formData.numberOfQuestions}
                                     onChange={(e) => {
@@ -351,7 +303,7 @@ export default function YouTubePage({ params }) {
                                     type="text"
                                     name="questionText"
                                     data-tour-id="name-questionText"
-                                    required=""
+                                    required
                                     placeholder="Insert the text you want to generate text dependent questions for."
                                     className="border border-gray-300 rounded-lg w-full h-16 px-2 py-2 bg-white"
                                     value={formData.questionText}
@@ -372,7 +324,9 @@ export default function YouTubePage({ params }) {
                         </form>
                     </div>
                 </div >
-            ) : (
+            )}
+
+            {(result || isLoading) && (
                 <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-lg p-6 animate-blurIn">
                     {isLoading ? (
                         <div className="flex justify-center items-center">
@@ -381,76 +335,63 @@ export default function YouTubePage({ params }) {
                     ) : error ? (
                         <div className="text-red-500">{error}</div>
                     ) : (
-                        <div ref={contentRef} className="markdown-content" id="md-content-63484949">
-                            {/* First loop to print questions and options */}
-                            {result?.map((item, index) => (
-                                <div key={index} className="question-block">
-                                    <div className="question">
-                                        <h3>{index + 1}. {item.question} ({item.difficulty})</h3>
+                        <div>
+                            <div className="flex items-center justify-between">
+                                <button
+                                    className="text-blue-500"
+                                    onClick={handleBack}
+                                >
+                                    Back
+                                </button>
+                                <h1 className="text-xl font-bold">Worksheet Question</h1>
+                                <button
+                                    className="text-blue-500"
+                                    onClick={handleEditPrompt}
+                                >
+                                    Edit
+                                </button>
+                            </div>
+
+                            <br />
+
+                            <div ref={contentRef} className="markdown-content" id="md-content-63484949">
+                                {result && (
+                                    <div>
+                                        <h2 className="text-xl font-bold mb-4">{result.Title}</h2>
+
+                                        <div>
+                                            <h3 className="text-lg font-semibold mb-4">Questions</h3>
+                                            {result.Questions.map((item, index) => (
+                                                <div key={index} className="mb-4">
+                                                    <p className="text-gray-700"><strong>{index + 1}. {item.question} ({item.difficulty})</strong></p>
+                                                    {item.options.map((option, optionIndex) => (
+                                                        <p key={optionIndex} className="ml-4">{String.fromCharCode(97 + optionIndex)}. {option}</p>
+                                                    ))}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-lg font-semibold mb-4">Answers</h3>
+                                            {result.Questions.map((item, index) => (
+                                                <div key={index} className="mb-4">
+                                                    <p className="text-gray-700"><strong>{index + 1}. Correct Answer: {item.answer}</strong></p>
+                                                    <p className="text-gray-700"><em>Explanation: {item.explanation}</em></p>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <p>
-                                        {item.options.map((option, i) => (
-                                            <span key={i} className="option">
-                                                {String.fromCharCode(97 + i)}. {option} <br />
-                                            </span>
-                                        ))}
-                                    </p>
-                                </div>
-                            ))}
+                                )}
+                            </div>
 
-                            {/* Print Answers heading */}
-                            <h2 className="answers-heading">Answers</h2>
+                            <br />
 
-                            {/* Second loop to print answers and explanations */}
-                            {result?.map((item, index) => (
-                                <div key={index} className="answer-block">
-                                    <p><strong>{index + 1}.</strong> {item.answer}</p>
-                                    <p><em>{item.explanation}</em></p>
-                                </div>
-                            ))}
-
+                            <ActionButtons contentRef={contentRef} result={result} docType={'worksheet-generator'} />
                         </div>
                     )}
-                    <div className="animate-blurIn" data-tour-id="message-actions">
-                        <div className="flex space-x-2">
-                            <button className="flex items-center border p-2 rounded-lg text-gray-700" onClick={handleCopy}>
-                                <svg
-                                    className="h-5 w-5 mr-1"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                >
-                                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2m0 16H8V7h11z"></path>
-                                </svg>
-                                Copy
-                            </button>
-                            <button className="flex items-center border p-2 rounded-lg text-gray-700" onClick={() => handleExport(result)}>
-                                <svg
-                                    className="h-5 w-5 mr-1"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                >
-                                    <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2m-1 8V6h2v4h3l-4 4-4-4zm6 7H7v-2h10z"></path>
-                                </svg>
-                                Export
-                            </button>
-                            <button className="flex items-center border p-2 rounded-lg text-gray-700" onClick={handleReadAloud}>
-                                <svg
-                                    className="h-5 w-5 mr-1"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="currentColor"
-                                >
-                                    <path d="M3 9v6h4l5 5V4L7 9zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77"></path>
-                                </svg>
-                                Read Aloud
-                            </button>
-                        </div>
-                    </div>
                 </div>
-            )
-            }
+            )}
+
         </div >
     );
 }
