@@ -123,9 +123,9 @@ export default function WorksheetGenerator({ params }) {
                 }
 
                 if (docId) {
-                    toast.success('Updated Generated Report Card to History!');
+                    toast.success('Updated Worksheet Generated Questions to History!');
                 } else {
-                    toast.success('Saved Generated Report Card to History!');
+                    toast.success('Saved Worksheet Generated Questions to History!');
                 }
                 // Commit the batch operation
                 await batch.commit();

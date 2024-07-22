@@ -124,9 +124,9 @@ export default function YouTubePage({ params }) {
                 }
 
                 if (docId) {
-                    toast.success('Updated Generated Report Card to History!');
+                    toast.success('Updated MCQ Generated to History!');
                 } else {
-                    toast.success('Saved Generated Report Card to History!');
+                    toast.success('Saved MCQ Generated to History!');
                 }
                 // Commit the batch operation
                 await batch.commit();
@@ -343,7 +343,7 @@ export default function YouTubePage({ params }) {
                                 >
                                     Back
                                 </button>
-                                <h1 className="text-xl font-bold">Worksheet Question</h1>
+                                <h1 className="text-xl font-bold">MCQ Question</h1>
                                 <button
                                     className="text-blue-500"
                                     onClick={handleEditPrompt}
@@ -386,7 +386,7 @@ export default function YouTubePage({ params }) {
 
                             <br />
 
-                            <ActionButtons contentRef={contentRef} result={result} docType={'worksheet-generator'} />
+                            <ActionButtons contentRef={contentRef} result={result} docType={'mcq-generator'} />
                         </div>
                     )}
                 </div>
