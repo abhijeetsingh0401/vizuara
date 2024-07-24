@@ -135,7 +135,7 @@ export default function WorksheetGenerator({ params }) {
 
             }
 
-            setIsFormVisible(false);
+            setIsFormVisible(true);
         } catch (error) {
             console.log("FORM DATA:", formData)
             console.error("Error submitting form:", error);
@@ -358,24 +358,73 @@ export default function WorksheetGenerator({ params }) {
                                     <div>
                                         <h2 className="text-xl font-bold mb-4">{result.Title}</h2>
 
-                                        <div>
+                                        <div className="mb-6">
+                                            <h3 className="text-lg font-semibold mb-2">About</h3>
+                                            {result.About.map((item, index) => (
+                                                <p key={index} className="mb-2">{item}</p>
+                                            ))}
+                                        </div>
+
+                                        <div className="mb-6">
                                             <h3 className="text-lg font-semibold mb-4">Questions</h3>
-                                            {result.Questions.map((item, index) => (
+
+                                            <h4 className="text-md font-semibold mb-2">Fill in the Blanks</h4>
+                                            {result.worksheet.fill_up.questions.map((item, index) => (
                                                 <div key={index} className="mb-4">
                                                     <p className="text-gray-700"><strong>{index + 1}. {item.question} ({item.difficulty})</strong></p>
-                                                    {item.options.map((option, optionIndex) => (
-                                                        <p key={optionIndex} className="ml-4">{String.fromCharCode(97 + optionIndex)}. {option}</p>
-                                                    ))}
+                                                    {item.options && item.options.length > 0 && (
+                                                        <div className="ml-4">
+                                                            <p className="font-semibold">Options:</p>
+                                                            {item.options.map((option, optionIndex) => (
+                                                                <p key={optionIndex}>{option}</p>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+
+                                            <h4 className="text-md font-semibold mb-2 mt-4">Multiple Choice Questions</h4>
+                                            {result.worksheet.mcq.questions.map((item, index) => (
+                                                <div key={index} className="mb-4">
+                                                    <p className="text-gray-700"><strong>{index + 1}. {item.question} ({item.difficulty})</strong></p>
+                                                    <div className="ml-4">
+                                                        {item.options.map((option, optionIndex) => (
+                                                            <p key={optionIndex}>{option}</p>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+
+                                            <h4 className="text-md font-semibold mb-2 mt-4">Open Ended Questions</h4>
+                                            {result.worksheet.open_ended.questions.map((item, index) => (
+                                                <div key={index} className="mb-4">
+                                                    <p className="text-gray-700"><strong>{index + 1}. {item.question} ({item.difficulty})</strong></p>
                                                 </div>
                                             ))}
                                         </div>
 
-                                        <div>
+                                        <div className="mb-6">
                                             <h3 className="text-lg font-semibold mb-4">Answers</h3>
-                                            {result.Questions.map((item, index) => (
+
+                                            <h4 className="text-md font-semibold mb-2">Fill in the Blanks</h4>
+                                            {result.worksheet.fill_up.questions.map((item, index) => (
+                                                <div key={index} className="mb-4">
+                                                    <p className="text-gray-700"><strong>{index + 1}. Answer: {item.answer}</strong></p>
+                                                </div>
+                                            ))}
+
+                                            <h4 className="text-md font-semibold mb-2 mt-4">Multiple Choice Questions</h4>
+                                            {result.worksheet.mcq.questions.map((item, index) => (
                                                 <div key={index} className="mb-4">
                                                     <p className="text-gray-700"><strong>{index + 1}. Correct Answer: {item.answer}</strong></p>
-                                                    <p className="text-gray-700"><em>Explanation: {item.explanation}</em></p>
+                                                </div>
+                                            ))}
+
+                                            <h4 className="text-md font-semibold mb-2 mt-4">Open Ended Questions</h4>
+                                            {result.worksheet.open_ended.questions.map((item, index) => (
+                                                <div key={index} className="mb-4">
+                                                    <p className="text-gray-700"><strong>{index + 1}. Answer:</strong></p>
+                                                    <p className="ml-4 text-gray-600">{item.answer}</p>
                                                 </div>
                                             ))}
                                         </div>
