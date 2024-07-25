@@ -15,15 +15,31 @@
   align-items: center;
   overflow: hidden;
   position: relative;
+  height: 120px; /* Adjust according to your needs */
 }
 
 .carouselTrack {
   display: flex;
   align-items: center;
-  transition: margin-left 0.1s linear;
+  animation: scroll 30s linear infinite;
+  width: max-content;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.carouselItem {
+  margin-right: 50px; /* Increase the gap between logos */
+  flex-shrink: 0;
 }
 
 .carouselImage {
-  margin-right: 20px;
-  flex-shrink: 0;
+  max-width: 100%;
+  max-height: 100%;
 }

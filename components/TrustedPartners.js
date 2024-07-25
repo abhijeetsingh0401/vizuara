@@ -28,52 +28,39 @@ const partners = [
 ];
 
 export default function TrustedPartners() {
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [marginLeft, setMarginLeft] = useState(0);
-    const containerRef = useRef(null);
-  
-    useEffect(() => {
-      const containerWidth = containerRef.current?.offsetWidth;
-      const totalWidth = containerRef.current?.scrollWidth;
-      const timer = setInterval(() => {
-        setMarginLeft((prevMarginLeft) => {
-          if (prevMarginLeft <= -totalWidth) {
-            return containerWidth;
-          }
-          return prevMarginLeft - 1;
-        });
-      }, 10);
-  
-      return () => clearInterval(timer);
-    }, []);
-  
-    return (
-      <div className={styles.carouselContainer}>
-        <h2>TRUSTED BY 4,000+ SCHOOL & DISTRICT PARTNERS WORLDWIDE</h2>
-        <div className={styles.carouselInner} ref={containerRef}>
-          <div className={styles.carouselTrack} style={{ marginLeft: `${marginLeft}px` }}>
-            {partners.map((partner, index) => (
+  const containerRef = useRef(null);
+
+  return (
+    <div className={styles.carouselContainer}>
+      <h2>TRUSTED BY 4,000+ SCHOOL & DISTRICT PARTNERS WORLDWIDE</h2>
+      <div className={styles.carouselInner} ref={containerRef}>
+        <div className={styles.carouselTrack}>
+          {partners.map((partner, index) => (
+            <div key={index} className={styles.carouselItem}>
               <Image
-                key={index}
                 src={partner.src}
                 alt={partner.alt}
                 width={200}
                 height={100}
                 className={styles.carouselImage}
               />
-            ))}
-            {partners.map((partner, index) => (
+            </div>
+          ))}
+          {partners.map((partner, index) => (
+            <div key={index + partners.length} className={styles.carouselItem}>
               <Image
-                key={index + partners.length}
                 src={partner.src}
                 alt={partner.alt}
                 width={200}
                 height={100}
                 className={styles.carouselImage}
               />
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
+
+
