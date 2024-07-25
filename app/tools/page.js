@@ -16,43 +16,43 @@ const tools = [
     {
         icon: "/text-dependent-question.svg",
         title: "Worksheet Generator",
-        description: "Text Dependent Question",
+        description: "Generate a worksheet based on any topic or text.",
         url: "/tools/worksheet-generator"
     },
     {
         icon: "/text-dependent-question.svg",
         title: "MCQ Generator",
-        description: "Text Dependent Question",
+        description: "Create a multiple choice assessment based on any topic, standard(s), or criteria!",
         url: "/tools/mcq"
     },
     {
         icon: "/text-summarizer.svg",
         title: "Text summarizer",
-        description: "Text Dependent Question",
+        description: "Take any text and summarize it in whatever length you choose.",
         url: "/tools/summarizer"
     },
     {
         icon: "/rewrite.svg",
         title: "Text Rewriter",
-        description: "Text Rewrite",
+        description: "Take any text and rewrite it with custom criteria however you’d like!",
         url: "/tools/rewrite"
     },
     {
         icon: "/proofreader.svg",
         title: "Proof Read",
-        description: "Proof Read",
+        description: "Take any text and have it proofread, correcting grammar, spelling, punctuation and adding clarity.",
         url: "/tools/proofreader"
     },
     {
         icon: "/planner.svg",
         title: "Lesson Plan",
-        description: "Translate Text",
+        description: "Generate a lesson plan for a topic or objective you’re teaching.",
         url: "/tools/planner"
     },
     {
         icon: "/report-card.svg",
         title: "Report Card",
-        description: "Translate Text",
+        description: "Generate report card comments with a student's strengths and areas for growth.",
         url: "/tools/report-card"
     },
     {
