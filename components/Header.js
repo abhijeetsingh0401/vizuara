@@ -28,8 +28,7 @@ export default function Header() {
           <a href="#" className="text-gray-600 hover:text-gray-900">About</a>
           {!user && (
             <>
-              <button onClick={signIn} className="px-4 py-2 text-gray-600 hover:text-gray-900">Log in</button>
-              <button onClick={signIn} className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">Sign up free</button>
+              <button onClick={() => handleClick('/tools')} className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">Log in / SignUp</button>
             </>
           )}
           {user && (

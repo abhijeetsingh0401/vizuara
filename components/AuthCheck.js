@@ -1,10 +1,27 @@
+'use client';
+
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { useContext } from 'react';
-import { UserContext } from '@lib/context';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@lib/context';
 
-// Component's children only shown to logged-in users
-export default function AuthCheck(props) {
-  const { username } = useContext(UserContext);
+export default function AuthCheck({ children, fallback }) {
+  const { user, username, loading } = useUser();
+  const router = useRouter();
 
-  return username ? props.children : props.fallback || <Link href="/enter">You must be signed in</Link>;
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return <div>Loading...</div>; // Or a loading spinner
+  }
+
+  if (!user) {
+    return fallback || <Link href="/enter">You must be signed in</Link>;
+  }
+
+  return children;
 }

@@ -28,7 +28,7 @@ export default function TextDependentQuestion() {
     useEffect(() => {
         // Redirect to /enter page if the user is not logged in
         if (!user) {
-            router.push('/enter');
+            router.push('/');
         }
     }, [user, router]);
 
