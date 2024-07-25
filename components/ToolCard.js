@@ -10,11 +10,10 @@ export default function ToolCard({ icon, title, description, isNew, url }) {
             <Image src={icon} alt={title} width={24} height={24} />
           </div>
           <h3 className="font-semibold text-base text-gray-800">{title}</h3>
-          {isNew && (
-            <span className="ml-2 bg-purple-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">NEW!</span>
-          )}
         </div>
+        <div>
         <p className="text-xs text-gray-500 line-clamp-2">{description}</p>
+        </div>
       </div>
     </Link>
   );

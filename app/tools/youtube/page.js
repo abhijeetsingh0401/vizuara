@@ -83,73 +83,80 @@ export default function YouTubePage({ params }) {
     setIsLoading(true);
     setIsFormVisible(false);
     setError(null);
-
-    console.log("FORM DATA:", formData)
+  
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/youtube-generator`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-        });
+      // First, attempt to get the transcript
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Unknown error occurred');
+      const transcriptResponse = await fetch(`/api/get-transcript`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!transcriptResponse.ok) {
+        const errorData = await transcriptResponse.json();
+        throw new Error(errorData.error || 'Transcript disabled or not available');
+      }
+  
+      const transcriptData = await transcriptResponse.json();
+
+      toast.success('Captions fetched now Generating Questions');
+
+      // If transcript is successfully fetched, proceed with the main API call
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/youtube-generator`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...formData, transcriptData }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Unknown error occurred');
+      }
+  
+      const data = await response.json();
+      
+      if (!data || !data.Title) {
+        toast.success('Received empty or invalid data');
+      }
+  
+      setResult(data);
+      console.log("DATA:", data);
+  
+      if (user && username) {
+        console.log("SAVING TO FIREBASE");
+  
+        const batch = writeBatch(firestore);
+  
+        const newDocId = `${data.Title}:${new Date().toISOString()}`;
+        const newResultDocRef = doc(firestore, `history/${username}/results/${newDocId}`);
+  
+        batch.set(newResultDocRef, { formData, result: data });
+  
+        if (docId) {
+          const oldResultDocRef = doc(firestore, `history/${username}/results/${docId}`);
+          batch.delete(oldResultDocRef);
         }
-
-        const data = await response.json();
-        // Check for valid data
-        console.log("DATA:", data)
-        if (!data || !data.Title) {
-            toast.success('Received empty or invalid data');
-        }
-
-        setResult(data);
-        console.log("DATA:", data)
-
-        if (user && username) {
-            console.log("SAVING TO FIREBASE");
-
-            const batch = writeBatch(firestore);
-
-            // Use the existing docId if it exists, otherwise generate a new one
-            const newDocId = `${data.Title}:${new Date().toISOString()}`;
-            const newResultDocRef = doc(firestore, `history/${username}/results/${newDocId}`);
-
-            // Create the new document
-            batch.set(newResultDocRef, { formData, result: data });
-
-            // Delete the old document if docId exists
-            if (docId) {
-                const oldResultDocRef = doc(firestore, `history/${username}/results/${docId}`);
-                batch.delete(oldResultDocRef);
-            }
-
-            if (docId) {
-                toast.success('Updated Generated Youtube Questions to History!');
-            } else {
-                toast.success('Saved Generated Youtube Questions to History!');
-            }
-            // Commit the batch operation
-            await batch.commit();
-
-            // Update the document ID state only after successful operation
-            setDocId(newDocId);
-
-        }
-
-        setIsFormVisible(false);
+  
+        await batch.commit();
+  
+        toast.success(docId ? 'Updated Generated Youtube Questions to History!' : 'Saved Generated Youtube Questions to History!');
+        setDocId(newDocId);
+      }
+  
+      setIsFormVisible(false);
     } catch (error) {
-        console.log("FORM DATA:", formData)
-        console.error("Error submitting form:", error);
-        toast.error(`Error: ${error.message}`);
-        setIsFormVisible(true);
+      console.error("Error submitting form:", error);
+      toast.error(`Error: ${error.message}`);
+      setIsFormVisible(true);
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
-}
+  };
 
   const handleBack = () => {
     setFormData({
@@ -172,7 +179,7 @@ export default function YouTubePage({ params }) {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 space-y-6">
       {isFormVisible && (
         <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-lg p-6">
           <div className="flex flex-col space-y-6">
@@ -181,7 +188,7 @@ export default function YouTubePage({ params }) {
               <div className="flex space-x-2">
                 <button
                   className="flex items-center text-blue-500"
-                  onClick={() =>
+                  onClick={() => {
                     setFormData({
                       gradeLevel: "5th-grade",
                       numberOfQuestions: 3,
@@ -190,7 +197,10 @@ export default function YouTubePage({ params }) {
                       hardQuestions: 1,
                       mediumQuestions: 1,
                       easyQuestions: 1,
-                    })
+                    });
+                    setDocId(null);
+
+                  }
                   }
                 >
                   <svg

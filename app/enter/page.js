@@ -45,7 +45,7 @@ function SignInButton() {
 
 // Sign out button
 function SignOutButton() {
-    return <button onClick={() => auth.signOut()}>Sign Out</button>;
+    return <button onClick={() => signOut(auth)}>Sign Out</button>;
 }
 
 // Username form
