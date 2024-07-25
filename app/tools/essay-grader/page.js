@@ -6,7 +6,8 @@ import { UserContext } from '@lib/context'; // Import UserContext to get the use
 import { useRouter } from 'next/navigation';
 import ActionButtons from '@components/ActionButton';
 import toast from 'react-hot-toast';
-import { gradeLevels, numberOfQuestions } from '@utils/utils';
+import { gradeLevels } from '@utils/utils';
+import PdfTextExtractor from '@components/PdfTextExtractor';
 
 export default function EssayGrader({ params }) {
     const contentRef = useRef(null);
@@ -19,7 +20,6 @@ export default function EssayGrader({ params }) {
     const [formData, setFormData] = useState({
         gradeLevel: "5th-grade",
         essay: "",
-        pdfText: ""
     });
 
     const [docId, setDocId] = useState(null); // State to store the document ID
@@ -29,12 +29,21 @@ export default function EssayGrader({ params }) {
         setFormData({ ...formData, [name]: value });
     };
 
+    const handlePdfTextExtracted = (extractedText, targetField) => {
+
+        setFormData(prevState => ({
+            ...prevState,
+            [targetField]: prevState[targetField] + (prevState[targetField] ? '\n\n' : '') + extractedText
+        }));
+
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         setIsLoading(true);
         setIsFormVisible(false);
         setError(null);
-
+        console.log("FORM DATA:", formData)
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/essay-grader`, {
                 method: "POST",
@@ -79,9 +88,9 @@ export default function EssayGrader({ params }) {
                 // Commit the batch operation
                 await batch.commit();
 
-                if(docId){
+                if (docId) {
                     toast.success('Updated Essay Suggestions to history!');
-                }else{
+                } else {
                     toast.success('Saved Essay Suggestions to history!');
                 }
 
@@ -104,7 +113,6 @@ export default function EssayGrader({ params }) {
         setFormData({
             gradeLevel: "5th-grade",
             essay: "",
-            pdfText: ""
         })
         setIsFormVisible(true);
         setResult(null);
@@ -129,7 +137,6 @@ export default function EssayGrader({ params }) {
                                         setFormData({
                                             gradeLevel: "5th-grade",
                                             essay: "",
-                                            pdfText: ""
                                         });
                                         setDocId(null);
                                     }
@@ -174,7 +181,7 @@ export default function EssayGrader({ params }) {
 
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-gray-700">
-                                    Essay:
+                                    Essay: <PdfTextExtractor onTextExtracted={handlePdfTextExtracted} targetField="essay" />
                                 </label>
                                 <textarea
                                     name="essay"
