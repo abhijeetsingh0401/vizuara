@@ -1,0 +1,29 @@
+.carouselContainer {
+  text-align: center;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.carouselInner {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.carouselTrack {
+  display: flex;
+  align-items: center;
+  transition: margin-left 0.1s linear;
+}
+
+.carouselImage {
+  margin-right: 20px;
+  flex-shrink: 0;
+}

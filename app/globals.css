@@ -2,37 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+body {
+  @apply text-gray-900;
 }
-
-.question {
-  margin-bottom: 20px; /* Gap between question and options */
-}
-
-.option {
-  margin-bottom: 10px; /* Gap between options */
-}
-
-.question-block {
-  margin-bottom: 30px; /* Gap between the last option and the next question */
-}
-
-.answers-heading {
-  margin-top: 40px; /* Gap between the last question and answers heading */
-  margin-bottom: 20px; /* Gap between answers heading and the first answer */
-}
-
-.answer-block {
-  margin-bottom: 20px; /* Gap between each answer and its explanation */
-}
-
-
-
-
-
-
-/*DELETE CSS BELOW LATER*/
-
