@@ -1,113 +1,87 @@
-'use client'
-import Card from "@components/Card"
-import Link from 'next/link';
+import ToolCard from "@components/ToolCard";
 
-export default function Home() {
+const tools = [
+    {
+        icon: "/youtube.svg",
+        title: "Youtube Generator",
+        description: "Generate guiding questions aligned to a YouTube video.",
+        url: "/tools/youtube"
+    },
+    {
+        icon: "/text-dependent-question.svg",
+        title: "Text Question",
+        description: "Generate text-dependent questions for students based on any text that you input.",
+        url: "/tools/text-dependent-question"
+    },
+    {
+        icon: "/text-dependent-question.svg",
+        title: "Worksheet Generator",
+        description: "Text Dependent Question",
+        url: "/tools/worksheet-generator"
+    },
+    {
+        icon: "/text-dependent-question.svg",
+        title: "MCQ Generator",
+        description: "Text Dependent Question",
+        url: "/tools/mcq"
+    },
+    {
+        icon: "/text-summarizer.svg",
+        title: "Text summarizer",
+        description: "Text Dependent Question",
+        url: "/tools/summarizer"
+    },
+    {
+        icon: "/rewrite.svg",
+        title: "Text Rewriter",
+        description: "Text Rewrite",
+        url: "/tools/rewrite"
+    },
+    {
+        icon: "/proofreader.svg",
+        title: "Proof Read",
+        description: "Proof Read",
+        url: "/tools/proofreader"
+    },
+    {
+        icon: "/planner.svg",
+        title: "Lesson Plan",
+        description: "Translate Text",
+        url: "/tools/planner"
+    },
+    {
+        icon: "/report-card.svg",
+        title: "Report Card",
+        description: "Translate Text",
+        url: "/tools/report-card"
+    },
+    {
+        icon: "/essay.png",
+        title: "Essay Grader",
+        description: "Grade Essay",
+        url: "/tools/essay-grader"
+    },
+    {
+        icon: "/ppt.png",
+        title: "PPT Generator",
+        description: "Generate PPT",
+        url: "/tools/ppt-generator"
+    }
+];
 
+export default function Tools() {
     return (
-        <div class="container mx-auto p-4">
-            <h1>Welcome to the Home Page</h1>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" >
-                <Card
-                    icon="/youtube.svg" // path to the icon in the public directory
-                    title="Youtube Generator"
-                    description="This is a description of the card."
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/youtube" // replace with the actual URL you want to redirect to
-                />
-                <Card
-                    icon="/text-dependent-question.svg" // path to the icon in the public directory
-                    title="Text Question"
-                    description="Text Dependent Question"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/text-dependent-question" // replace with the actual URL you want to redirect to
-                />
-                <Card
-                    icon="/text-dependent-question.svg" // path to the icon in the public directory
-                    title="Worksheet Generator"
-                    description="Text Dependent Question"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/worksheet-generator" // replace with the actual URL you want to redirect to
-                />
-                <Card
-                    icon="/text-dependent-question.svg" // path to the icon in the public directory
-                    title="MCQ Generator"
-                    description="Text Dependent Question"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/mcq" // replace with the actual URL you want to redirect to
-                />
-                <Card
-                    icon="/text-summarizer.svg" // path to the icon in the public directory
-                    title="Text summarizer"
-                    description="Text Dependent Question"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/summarizer" // replace with the actual URL you want to redirect to
-                />
-                <Card
-                    icon="/rewrite.svg" // path to the icon in the public directory
-                    title="Text Rewriter"
-                    description="Text Rewrite"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/rewrite" // replace with the actual URL you want to redirect to
-                />
-                <Card
-                    icon="/proofreader.svg" // path to the icon in the public directory
-                    title="Proof Read"
-                    description="Proof Read"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/proofreader" // replace with the actual URL you want to redirect to
-                />
-                {/* <Card
-                    icon="/translator.svg" // path to the icon in the public directory
-                    title="Translate Text"
-                    description="Translate Text"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/translator" // replace with the actual URL you want to redirect to
-                /> */}
-                <Card
-                    icon="/planner.svg" // path to the icon in the public directory
-                    title="Lesson Plan"
-                    description="Translate Text"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/planner" // replace with the actual URL you want to redirect to
-                />
-                <Card
-                    icon="/report-card.svg" // path to the icon in the public directory
-                    title="Report Card"
-                    description="Translate Text"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/report-card" // replace with the actual URL you want to redirect to
-                />
-                <Card
-                    icon="/essay.png" // path to the icon in the public directory
-                    title="Essay Grader"
-                    description="Grade Essay"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/essay-grader" // replace with the actual URL you want to redirect to
-                />
-                <Card
-                    icon="/ppt.png" // path to the icon in the public directory
-                    title="PPT Generator"
-                    description="Generate PPT"
-                    isNew={true}
-                    isFav={true}
-                    url="/tools/ppt-generator" // replace with the actual URL you want to redirect to
-                />
-            </div>
-            <Link href="/history">
-                <button>History</button>
-            </Link>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {tools.map((tool, index) => (
+          <ToolCard
+            key={index}
+            icon={tool.icon}
+            title={tool.title}
+            description={tool.description}
+            isNew={tool.isNew}
+            url={tool.url}
+          />
+        ))}
+      </div>
     );
-}
+  }

@@ -3,9 +3,19 @@
 import { useContext } from 'react'
 import { UserContext } from '@lib/context'
 import { signIn } from '@lib/auth'
+import { useRouter } from 'next/navigation'
 
 export default function Header() {
   const { user } = useContext(UserContext)
+  const router = useRouter()
+
+  const handleClick = (path) => {
+    if (user) {
+      router.push(path)
+    } else {
+      signIn()
+    }
+  }
 
   return (
     <header className="container mx-auto px-4 py-6">
@@ -20,6 +30,11 @@ export default function Header() {
             <>
               <button onClick={signIn} className="px-4 py-2 text-gray-600 hover:text-gray-900">Log in</button>
               <button onClick={signIn} className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">Sign up free</button>
+            </>
+          )}
+          {user && (
+            <>
+              <button onClick={() => handleClick('/tools')} className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">Tools</button>
             </>
           )}
         </div>

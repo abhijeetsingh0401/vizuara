@@ -19,8 +19,8 @@ export default function CTAButtons() {
 
   return (
     <div className="flex justify-center space-x-4 mb-12">
-      <button onClick={() => handleClick('/schools')} className="px-6 py-3 bg-black text-white rounded-md hover:bg-gray-800">For Schools</button>
-      <button onClick={() => handleClick('/teachers')} className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700">For Teachers</button>
+      <button onClick={() => handleClick('/tools')} className="px-6 py-3 bg-black text-white rounded-md hover:bg-gray-800">For Schools</button>
+      <button onClick={() => handleClick('/tools')} className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700">For Teachers</button>
     </div>
   )
 }
