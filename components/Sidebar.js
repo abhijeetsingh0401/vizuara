@@ -4,7 +4,7 @@ import LogoutButton from './LogoutButton';
 
 const sidebarItems = [
   { icon: '🧙‍♂️', text: 'Magic Tools', href: '/tools' },
-  { icon: '📜', text: 'Output History', href: '/history' },
+  { icon: '📜', text: 'Output History', href: '/tools/history' },
 ];
 
 export default function Sidebar() {
