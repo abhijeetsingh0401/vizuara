@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import ActionButtons from '@components/ActionButton';
 import { gradeLevels, numberOfQuestions } from '@utils/utils'; // Import gradeLevels from utils
 import toast from 'react-hot-toast';
+import PdfTextExtractor from "@components/PdfTextExtractor";
 
 export default function WorksheetGenerator({ params }) {
     const contentRef = useRef(null);
@@ -166,6 +167,15 @@ export default function WorksheetGenerator({ params }) {
         setIsFormVisible(true);
     };
 
+    const handlePdfTextExtracted = (extractedText, targetField) => {
+
+        setFormData(prevState => ({
+            ...prevState,
+            [targetField]: prevState[targetField] + (prevState[targetField] ? '\n\n' : '') + extractedText
+        }));
+
+    };
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 space-y-6">
             {isFormVisible && (
@@ -295,10 +305,10 @@ export default function WorksheetGenerator({ params }) {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Topic or Text:
+                                <label className="block text-sm font-medium text-gray-700 flex items-center justify-between">
+                                    Topic or Text: <PdfTextExtractor onTextExtracted={handlePdfTextExtracted} targetField="questionText" />
                                 </label>
-                                <input
+                                <textarea
                                     type="text"
                                     name="questionText"
                                     data-tour-id="name-questionText"
