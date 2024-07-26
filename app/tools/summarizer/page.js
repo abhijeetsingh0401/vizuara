@@ -6,6 +6,7 @@ import { UserContext } from '@lib/context'; // Import UserContext to get the use
 import { useRouter } from 'next/navigation';
 import ActionButtons from '@components/ActionButton';
 import toast from 'react-hot-toast';
+import PdfTextExtractor from "@components/PdfTextExtractor";
 
 export default function TextDependentQuestion() {
     const contentRef = useRef(null);
@@ -39,34 +40,13 @@ export default function TextDependentQuestion() {
         });
     }, []);
 
-    const handleFileChange = async (event) => {
-        const file = event.target.files[0];
-        if (file && file.type === 'application/pdf') {
-            if (!pdfjsLib) {
-                console.error("PDF.js library is not loaded yet.");
-                return;
-            }
-            setLoading(true);
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const typedarray = new Uint8Array(reader.result);
-                const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
-                let extractedText = '';
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map((item) => item.str).join(' ');
-                    extractedText += pageText + '\n';
-                }
-                setText(extractedText);
-                setFormData({ ...formData, ['pdfText']: extractedText });
-                console.log("EXTRACTED DATA:", extractedText)
-                setLoading(false);
-            };
-            reader.readAsArrayBuffer(file);
-        } else {
-            alert('Please upload a PDF file.');
-        }
+    const handlePdfTextExtracted = (extractedText, targetField) => {
+
+        setFormData(prevState => ({
+            ...prevState,
+            [targetField]: prevState[targetField] + (prevState[targetField] ? '\n\n' : '') + extractedText
+        }));
+
     };
 
     const handleChange = (e) => {
@@ -125,9 +105,9 @@ export default function TextDependentQuestion() {
                 // Commit the batch operation
                 await batch.commit();
 
-                if(docId){
+                if (docId) {
                     toast.success('Updated Text Summary saved to history!');
-                }else{
+                } else {
                     toast.success('Generated text Summary saved to history!');
                 }
 
@@ -211,10 +191,10 @@ export default function TextDependentQuestion() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Original Text:
+                                <label className="block text-sm font-medium text-gray-700 flex items-center justify-between">
+                                    Original Text: <PdfTextExtractor onTextExtracted={handlePdfTextExtracted} targetField="inputText" />
                                 </label>
-                                <input
+                                <textarea
                                     type="text"
                                     name="inputText"
                                     data-tour-id="name-inputText"

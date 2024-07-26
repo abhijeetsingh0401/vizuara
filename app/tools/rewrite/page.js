@@ -5,6 +5,7 @@ import { UserContext } from '@lib/context'; // Import UserContext to get the use
 import { useRouter } from 'next/navigation';
 import ActionButtons from '@components/ActionButton';
 import toast from 'react-hot-toast';
+import PdfTextExtractor from "@components/PdfTextExtractor";
 
 export default function Rewrite({ params }) {
     const contentRef = useRef(null);
@@ -40,34 +41,13 @@ export default function Rewrite({ params }) {
         });
     }, []);
 
-    const handleFileChange = async (event) => {
-        const file = event.target.files[0];
-        if (file && file.type === 'application/pdf') {
-            if (!pdfjsLib) {
-                console.error("PDF.js library is not loaded yet.");
-                return;
-            }
-            setLoading(true);
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const typedarray = new Uint8Array(reader.result);
-                const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
-                let extractedText = '';
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map((item) => item.str).join(' ');
-                    extractedText += pageText + '\n';
-                }
-                setText(extractedText);
-                setFormData({ ...formData, ['pdfText']: extractedText });
-                console.log("EXTRACTED DATA:", extractedText)
-                setLoading(false);
-            };
-            reader.readAsArrayBuffer(file);
-        } else {
-            alert('Please upload a PDF file.');
-        }
+    const handlePdfTextExtracted = (extractedText, targetField) => {
+
+        setFormData(prevState => ({
+            ...prevState,
+            [targetField]: prevState[targetField] + (prevState[targetField] ? '\n\n' : '') + extractedText
+        }));
+
     };
 
     const handleChange = (e) => {
@@ -116,9 +96,9 @@ export default function Rewrite({ params }) {
 
                 await batch.commit();
 
-                if(docId){
+                if (docId) {
                     toast.success('Re-written text updated to history!');
-                }else{
+                } else {
                     toast.success('Re-written text saved to history!');
                 }
 
@@ -184,10 +164,10 @@ export default function Rewrite({ params }) {
                         <p className="text-gray-600">Rewrite</p>
                         <form className="space-y-4" onSubmit={handleSubmit}>
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Original Text:
+                                <label className="block text-sm font-medium text-gray-700 flex items-center justify-between">
+                                    Original Text: <PdfTextExtractor onTextExtracted={handlePdfTextExtracted} targetField="originalText" />
                                 </label>
-                                <input
+                                <textarea
                                     type="text"
                                     name="originalText"
                                     data-tour-id="name-originalText"
@@ -203,7 +183,7 @@ export default function Rewrite({ params }) {
                                 <label className="block text-sm font-medium text-gray-700">
                                     Rewrite so that:
                                 </label>
-                                <input
+                                <textarea
                                     type="text"
                                     name="rewriteText"
                                     data-tour-id="name-rewriteText"

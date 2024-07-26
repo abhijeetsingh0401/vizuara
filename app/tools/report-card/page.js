@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import ActionButtons from '@components/ActionButton';
 import { gradeLevels } from '@utils/utils'; // Import gradeLevels from utils
 import toast from 'react-hot-toast';
+import PdfTextExtractor from "@components/PdfTextExtractor";
 
 export default function ReportCard({ params }) {
     const contentRef = useRef(null);
@@ -117,6 +118,15 @@ export default function ReportCard({ params }) {
         setIsFormVisible(true);
     };
 
+    const handlePdfTextExtracted = (extractedText, targetField) => {
+
+        setFormData(prevState => ({
+            ...prevState,
+            [targetField]: prevState[targetField] + (prevState[targetField] ? '\n\n' : '') + extractedText
+        }));
+
+    };
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 space-y-6">
             {isFormVisible && (
@@ -193,10 +203,10 @@ export default function ReportCard({ params }) {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Areas of Strength:
+                                <label className="block text-sm font-medium text-gray-700 flex items-center justify-between">
+                                    Areas of Strength: <PdfTextExtractor onTextExtracted={handlePdfTextExtracted} targetField="strengths" />
                                 </label>
-                                <input
+                                <textarea
                                     type="text"
                                     name="strengths"
                                     data-tour-id="name-strengths"
@@ -210,10 +220,10 @@ export default function ReportCard({ params }) {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Areas for Growth:
+                                <label className="block text-sm font-medium text-gray-700 flex items-center justify-between">
+                                    Areas for Growth: <PdfTextExtractor onTextExtracted={handlePdfTextExtracted} targetField="growths" />
                                 </label>
-                                <input
+                                <textarea
                                     type="text"
                                     name="growths"
                                     data-tour-id="name-growths"
