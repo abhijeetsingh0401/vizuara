@@ -6,6 +6,7 @@ import { UserContext } from '@lib/context'; // Import UserContext to get the use
 import ActionButtons from '@components/ActionButton';
 import { gradeLevels } from '@utils/utils'; // Import gradeLevels from utils
 import toast from 'react-hot-toast';
+import PdfTextExtractor from "@components/PdfTextExtractor";
 
 export default function Planner({ params }) {
     const contentRef = useRef(null);
@@ -31,8 +32,8 @@ export default function Planner({ params }) {
 
     const handleSubmit = async (event) => {
 
-        console.log("DOCID:", docId)
-
+        console.log("FORM DATA:", formData)
+    
         event.preventDefault();
         setIsLoading(true);
         setIsFormVisible(false);
@@ -81,9 +82,9 @@ export default function Planner({ params }) {
                 // Commit the batch operation
                 await batch.commit();
 
-                if(docId){
+                if (docId) {
                     toast.success('Updated Generated Plan to history!');
-                }else{
+                } else {
                     toast.success('Saved Generated Plan to history!');
                 }
 
@@ -117,6 +118,15 @@ export default function Planner({ params }) {
 
     const handleEditPrompt = () => {
         setIsFormVisible(true);
+    };
+
+    const handlePdfTextExtracted = (extractedText, targetField) => {
+
+        setFormData(prevState => ({
+            ...prevState,
+            [targetField]: prevState[targetField] + (prevState[targetField] ? '\n\n' : '') + extractedText
+        }));
+
     };
 
     return (
@@ -177,10 +187,10 @@ export default function Planner({ params }) {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Topic, Standard or Objective:
+                                <label className="block text-sm font-medium text-gray-700 flex items-center justify-between">
+                                    Topic, Standard or Objective: <PdfTextExtractor onTextExtracted={handlePdfTextExtracted} targetField="content" />
                                 </label>
-                                <input
+                                <textarea
                                     type="text"
                                     name="content"
                                     data-tour-id="name-content"
@@ -197,7 +207,7 @@ export default function Planner({ params }) {
                                 <label className="block text-sm font-medium text-gray-700">
                                     Additional Criteria:
                                 </label>
-                                <input
+                                <textarea
                                     type="text"
                                     name="additionalContext"
                                     data-tour-id="name-additionalContext"

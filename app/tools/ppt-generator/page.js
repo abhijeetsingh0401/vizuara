@@ -5,6 +5,7 @@ import { UserContext } from '@lib/context'; // Import UserContext to get the use
 import PptxGenJS from 'pptxgenjs';
 import ActionButtons from '@components/ActionButton';
 import toast from 'react-hot-toast';
+import PdfTextExtractor from "@components/PdfTextExtractor";
 
 export default function PPTGenerator({ params }) {
     const contentRef = useRef(null);
@@ -96,9 +97,9 @@ export default function PPTGenerator({ params }) {
                 // Commit the batch operation
                 await batch.commit();
 
-                if(docId){
+                if (docId) {
                     toast.success('Updated Generated PPT to history!');
-                }else{
+                } else {
                     toast.success('Saved Generated PPT to history!');
                 }
 
@@ -127,6 +128,15 @@ export default function PPTGenerator({ params }) {
 
     const handleEditPrompt = () => {
         setIsFormVisible(true);
+    };
+
+    const handlePdfTextExtracted = (extractedText, targetField) => {
+
+        setFormData(prevState => ({
+            ...prevState,
+            [targetField]: prevState[targetField] + (prevState[targetField] ? '\n\n' : '') + extractedText
+        }));
+
     };
 
     return (
@@ -164,10 +174,10 @@ export default function PPTGenerator({ params }) {
                         </p>
                         <form className="space-y-4" onSubmit={handleSubmit}>
                             <div className="space-y-2">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Topic:
+                                <label className="block text-sm font-medium text-gray-700 flex items-center justify-between">
+                                    Topic: <PdfTextExtractor onTextExtracted={handlePdfTextExtracted} targetField="topic" />
                                 </label>
-                                <input
+                                <textarea
                                     type="text"
                                     name="topic"
                                     data-tour-id="name-topic"
