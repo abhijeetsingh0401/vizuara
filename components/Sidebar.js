@@ -10,7 +10,7 @@ const sidebarItems = [
 export default function Sidebar() {
   return (
     <div className="w-64 bg-white shadow-lg h-screen p-4 flex flex-col">
-      <div className="text-2xl font-bold text-purple-600 mb-8">Vizuara</div>
+      <div className="text-2xl font-bold text-orange-400 mb-8"><a href="/" >Vizuara</a></div>
       <nav className="flex-grow">
         {sidebarItems.map((item, index) => (
           <Link key={index} href={item.href}>
@@ -22,7 +22,7 @@ export default function Sidebar() {
         ))}
       </nav>
       <div className="mt-auto">
-        <div className="text-center text-purple-600 font-bold mb-4">
+        <div className="text-center text-cyan-400 font-bold mb-4">
           TEACHERS ARE MAGIC
         </div>
         <LogoutButton />
