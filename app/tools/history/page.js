@@ -90,17 +90,12 @@ export default function History() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <a href={`/tools/youtube/${result.id}`} className="text-sm font-medium text-blue-600 hover:underline">{result.result.Title}</a>
-                      <div className="ml-2">
-                        <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24">
-                          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z"></path>
-                        </svg>
-                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(result.id.split(':').slice(1).join(':')).toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                  <button onClick={() => deleteResult(result.id)} className="text-gray-400 hover:text-gray-600">
-                  <svg className="w-6 h-6" viewBox="0 0 24 24">
+                    <button onClick={() => deleteResult(result.id)} className="text-gray-400 hover:text-gray-600">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24">
                         <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"></path>
                       </svg>
                     </button>
