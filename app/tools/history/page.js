@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState, useContext } from "react";
 import { useRouter } from 'next/navigation';
-import { firestore, collection, getDocs } from '@lib/firebase'; // Import Firestore methods from your library
+import { firestore, collection, getDocs, deleteDoc, doc } from '@lib/firebase'; // Import Firestore methods from your library
 import { UserContext } from '@lib/context'; // Import UserContext to get the user data
+import toast from 'react-hot-toast';
 
 export default function History() {
   const { user, username } = useContext(UserContext); // Get user and username from UserContext
@@ -53,6 +54,21 @@ export default function History() {
     return <div>{error}</div>;
   }
 
+  const deleteResult = async (resultId) => {
+    try {
+      console.log(`Attempting to delete document at path: history/${username}/results/${resultId}`);
+      const docRef = doc(firestore, `history/${username}/results`, resultId);
+      console.log('Document Reference:', docRef);
+      await deleteDoc(docRef);
+      toast.success('Deleted');
+      setResults(results.filter(result => result.id !== resultId));
+    } catch (error) {
+      toast.error('Cannot delete');
+      console.error("Error deleting result: ", error);
+      setError("Failed to delete the result. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <h1 className="text-2xl font-bold mb-4">Your History</h1>
@@ -65,10 +81,7 @@ export default function History() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saved</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shared</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500"></th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500"></th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Delete</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -76,7 +89,7 @@ export default function History() {
                 <tr key={result.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <a href={`/tools/youtube/${result.id}`} className="text-sm font-medium text-blue-600 hover:underline">{result.formData.questionTypes} Quiz</a>
+                      <a href={`/tools/youtube/${result.id}`} className="text-sm font-medium text-blue-600 hover:underline">{result.result.Title}</a>
                       <div className="ml-2">
                         <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24">
                           <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z"></path>
@@ -84,32 +97,10 @@ export default function History() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(result.id).toLocaleString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(result.id.split(':').slice(1).join(':')).toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="w-6 h-6" viewBox="0 0 24 24">
-                        <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2m0 15-5-2.18L7 18V5h10z"></path>
-                      </svg>
-                    </button>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="w-6 h-6" viewBox="0 0 24 24">
-                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2m-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2m3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1z"></path>
-                      </svg>
-                    </button>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button className="flex items-center px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600">
-                      <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24">
-                        <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
-                      </svg>
-                      Preview
-                    </button>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <svg className="w-6 h-6" viewBox="0 0 24 24">
+                  <button onClick={() => deleteResult(result.id)} className="text-gray-400 hover:text-gray-600">
+                  <svg className="w-6 h-6" viewBox="0 0 24 24">
                         <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"></path>
                       </svg>
                     </button>

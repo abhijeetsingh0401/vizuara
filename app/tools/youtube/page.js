@@ -1,9 +1,7 @@
 'use client'
 import { useState, useRef, useContext, useEffect } from "react";
-import { jsPDF } from "jspdf";
 import { firestore, doc, setDoc, getDoc, writeBatch } from '@lib/firebase'; // Import Firestore methods from your library
 import { UserContext } from '@lib/context'; // Import UserContext to get the user data
-import { useRouter } from 'next/navigation';
 import ActionButtons from '@components/ActionButton';
 import { gradeLevels, numberOfQuestions } from '@utils/utils'; // Import gradeLevels from utils
 import toast from 'react-hot-toast';
@@ -26,7 +24,7 @@ export default function YouTubePage({ params }) {
     easyQuestions: 1,
   });
   const [docId, setDocId] = useState(null); // State to store the document ID
-
+ 
   const questionTypes = [
     { value: "MCQ", label: "Multiple choice" },
     { value: "TrueFalse", label: "True or False" },
@@ -83,7 +81,7 @@ export default function YouTubePage({ params }) {
     setIsLoading(true);
     setIsFormVisible(false);
     setError(null);
-  
+
     try {
       // First, attempt to get the transcript
 
@@ -97,13 +95,13 @@ export default function YouTubePage({ params }) {
 
       if (!transcriptResponse.ok) {
         const errorData = await transcriptResponse.json();
-        throw new Error(errorData.error || 'Transcript disabled or not available');
+        throw new Error(errorData.error);
       }
-  
+
       const transcriptData = await transcriptResponse.json();
 
       toast.success('Captions fetched now Generating Questions');
-
+      
       // If transcript is successfully fetched, proceed with the main API call
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/youtube-generator`, {
         method: "POST",
@@ -117,37 +115,37 @@ export default function YouTubePage({ params }) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Unknown error occurred');
       }
-  
+
       const data = await response.json();
-      
+
       if (!data || !data.Title) {
         toast.success('Received empty or invalid data');
       }
-  
+
       setResult(data);
       console.log("DATA:", data);
-  
+
       if (user && username) {
         console.log("SAVING TO FIREBASE");
-  
+
         const batch = writeBatch(firestore);
-  
+
         const newDocId = `${data.Title}:${new Date().toISOString()}`;
         const newResultDocRef = doc(firestore, `history/${username}/results/${newDocId}`);
-  
-        batch.set(newResultDocRef, { formData, result: data });
-  
+
+        batch.set(newResultDocRef, { formData, result: data, toolUrl: 'youtube'  });
+
         if (docId) {
           const oldResultDocRef = doc(firestore, `history/${username}/results/${docId}`);
           batch.delete(oldResultDocRef);
         }
-  
+
         await batch.commit();
-  
+
         toast.success(docId ? 'Updated Generated Youtube Questions to History!' : 'Saved Generated Youtube Questions to History!');
         setDocId(newDocId);
       }
-  
+
       setIsFormVisible(false);
     } catch (error) {
       console.error("Error submitting form:", error);

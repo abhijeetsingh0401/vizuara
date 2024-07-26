@@ -4,7 +4,7 @@ import { parse } from 'url';
 const url = require('url');
 
 export async function POST(request) {
-
+    console.log("INSIDE TRANSCIPT")
     try {
 
         const {videoIdOrURL} = await request.json();
