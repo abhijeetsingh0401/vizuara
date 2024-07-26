@@ -30,4 +30,11 @@ export const numberOfQuestions = [
     { value: 18, label: "18" },
     { value: 19, label: "19" },
     { value: 20, label: "20" },
-  ];
+];
+
+export const textQuestionTypeOptions = [
+    "Comprehension",
+    "Literary Devices",
+    "Mix of Literary Devices & Comprehension",
+    "Theme"
+];

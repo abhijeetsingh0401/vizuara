@@ -6,7 +6,8 @@ import { UserContext } from '@lib/context'; // Import UserContext to get the use
 import { useRouter } from 'next/navigation';
 import ActionButtons from '@components/ActionButton';
 import toast from 'react-hot-toast';
-import { gradeLevels, numberOfQuestions } from '@utils/utils';
+import { gradeLevels, numberOfQuestions, textQuestionTypeOptions } from '@utils/utils';
+import PdfTextExtractor from "@components/PdfTextExtractor";
 
 export default function TextDependentQuestion() {
   const contentRef = useRef(null);
@@ -20,7 +21,7 @@ export default function TextDependentQuestion() {
   const [formData, setFormData] = useState({
     gradeLevel: "5th-grade",
     numberOfQuestions: 3,
-    questionTypes: "",
+    questionTypes: "Comprehension",
     hardQuestions: 1,
     mediumQuestions: 1,
     easyQuestions: 1,
@@ -45,34 +46,13 @@ export default function TextDependentQuestion() {
     });
   }, []);
 
-  const handleFileChange = async (event) => {
-    const file = event.target.files[0];
-    if (file && file.type === 'application/pdf') {
-      if (!pdfjsLib) {
-        console.error("PDF.js library is not loaded yet.");
-        return;
-      }
-      setLoading(true);
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const typedarray = new Uint8Array(reader.result);
-        const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
-        let extractedText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items.map((item) => item.str).join(' ');
-          extractedText += pageText + '\n';
-        }
-        setText(extractedText);
-        setFormData({ ...formData, ['pdfText']: extractedText });
-        console.log("EXTRACTED DATA:", extractedText)
-        setLoading(false);
-      };
-      reader.readAsArrayBuffer(file);
-    } else {
-      alert('Please upload a PDF file.');
-    }
+  const handlePdfTextExtracted = (extractedText, targetField) => {
+
+    setFormData(prevState => ({
+      ...prevState,
+      [targetField]: prevState[targetField] + (prevState[targetField] ? '\n\n' : '') + extractedText
+    }));
+
   };
 
   const handleChange = (e) => {
@@ -150,6 +130,8 @@ export default function TextDependentQuestion() {
         toast.success('Received empty or invalid data');
       }
 
+      console.log("DATA:", data)
+
       setResult(data);
       console.log("DATA:", data)
 
@@ -198,7 +180,7 @@ export default function TextDependentQuestion() {
   const handleBack = () => {
     setFormData({
       gradeLevel: "5th-grade",
-      questionTypes: "",
+      questionTypes: "Comprehension",
       numberOfQuestions: 3,
       hardQuestions: 1,
       mediumQuestions: 1,
@@ -230,7 +212,7 @@ export default function TextDependentQuestion() {
                   onClick={() => {
                     setFormData({
                       gradeLevel: "5th-grade",
-                      questionTypes: "",
+                      questionTypes: "Comprehension",
                       numberOfQuestions: 3,
                       hardQuestions: 1,
                       mediumQuestions: 1,
@@ -275,6 +257,28 @@ export default function TextDependentQuestion() {
                   ))}
                 </select>
               </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Question Type:
+                </label>
+                <select
+                  name="questionTypes"
+                  data-tour-id="name-questionTypes"
+                  required
+                  className="border border-gray-300 rounded-lg w-full h-10 px-2 bg-white"
+                  value={formData.questionTypes || "Comprehension"}
+                  onChange={handleChange}
+                >
+                  {textQuestionTypeOptions.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
                   Number of Questions:
@@ -302,21 +306,6 @@ export default function TextDependentQuestion() {
                     </option>
                   ))}
                 </select>
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Question Type:
-                </label>
-                <input
-                  type="text"
-                  name="questionTypes"
-                  data-tour-id="name-questionTypes"
-                  required
-                  placeholder="Comprehension, Literary Devices, Mix of Literary Devices & Comprehension, Theme, etc."
-                  className="border border-gray-300 rounded-lg w-full h-16 px-2 py-2 bg-white" // Adjusted padding here
-                  value={formData.questionTypes}
-                  onChange={handleChange}
-                />
               </div>
 
               <div className="space-y-2">
@@ -366,50 +355,13 @@ export default function TextDependentQuestion() {
               </div>
 
               <div className="space-y-4">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 flex items-center justify-between">
                   Insert the text you want to generate text dependent questions
-                  for:
+                  for: <PdfTextExtractor onTextExtracted={handlePdfTextExtracted} targetField="questionText" />
                 </label>
                 <div className="flex items-start space-x-2">
-                  <div className="flex flex-col items-center space-y-2">
-                    {/* Voice Input Icon */}
-                    <button
-                      type="button"
-                      className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full"
-                    >
-                      <svg
-                        className="h-6 w-6 text-gray-700"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M12 1c-1.66 0-3 1.34-3 3v7c0 1.66 1.34 3 3 3s3-1.34 3-3V4c0-1.66-1.34-3-3-3zm6.3 7c0-3.2-2.58-5.8-5.8-5.8S6.7 4.8 6.7 8v4c0 2.4 1.94 4.4 4.3 4.9v1.2H9.8v1.6h4.4v-1.6h-1.2v-1.2c2.36-.5 4.3-2.5 4.3-4.9V8zm-5.8 9.2c-.8 0-1.5-.2-2.1-.6l-.8.8c.6.5 1.3.8 2.1.8 1.7 0 3.1-1.4 3.1-3.1h-1.6c0 .8-.7 1.5-1.5 1.5-.5 0-.9-.2-1.2-.5l-.8.8c.5.5 1.2.8 2 .8 1.7 0 3-1.3 3-3h1.6c.1 1.7-1.3 3.2-3.1 3.2z"></path>
-                      </svg>
-                    </button>
-                    {/* PDF Upload Icon */}
-                    <label
-                      htmlFor="pdf-upload"
-                      className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full cursor-pointer"
-                    >
-                      <svg
-                        className="h-6 w-6 text-gray-700"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-6V3.5L18.5 8H13z"></path>
-                      </svg>
-                      <input
-                        id="pdf-upload"
-                        type="file"
-                        accept="application/pdf"
-                        className="hidden"
-                        onChange={handleFileChange}
-                        required={false}
-                      />
-                    </label>
-                  </div>
-                  <input
+
+                  <textarea
                     type="text"
                     name="questionText"
                     data-tour-id="name-questionText"
@@ -468,28 +420,44 @@ export default function TextDependentQuestion() {
                 {result && (
                   <div>
                     <h2 className="text-xl font-bold mb-4">{result.Title}</h2>
+                    <p className="text-lg mb-4"><strong>Text Theme:</strong> {result['Original Theme']}</p>
 
-                    <div>
+                    {/* Original Text section - you'll need to add this to your data structure */}
+                    {result.OriginalText && (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold mb-2">Original Text:</h3>
+                        <p className="text-gray-700">{result.OriginalText}</p>
+                      </div>
+                    )}
+
+                    <div className="mb-8">
                       <h3 className="text-lg font-semibold mb-4">Questions</h3>
-                      {result.Questions.map((item, index) => (
+                      {result['text-question'].map((item, index) => (
                         <div key={index} className="mb-4">
-                          <p className="text-gray-700"><strong>{index + 1}. {item.question} ({item.difficulty})</strong></p>
-                          {item.options.map((option, optionIndex) => (
-                            <p key={optionIndex} className="ml-4">{String.fromCharCode(97 + optionIndex)}. {option}</p>
-                          ))}
+                          <p className="text-gray-700">
+                            <strong>{index + 1}. {item.question}</strong>
+                            <span className="text-sm text-gray-500 ml-2">({item.difficulty})</span>
+                          </p>
                         </div>
                       ))}
                     </div>
 
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Answers</h3>
-                      {result.Questions.map((item, index) => (
-                        <div key={index} className="mb-4">
-                          <p className="text-gray-700"><strong>{index + 1}. Correct Answer: {item.answer}</strong></p>
-                          <p className="text-gray-700"><em>Explanation: {item.explanation}</em></p>
+                    <div className="mt-8">
+                      <h3 className="text-xl font-bold mb-6 text-gray-800">Answers and Explanations</h3>
+                      {result['text-question'].map((item, index) => (
+                        <div key={index} className="mb-8 p-6 bg-white">
+                          <div className="mb-4">
+                            <strong className="text-lg text-blue-600">Answer {index + 1}:</strong>
+                            <p className="mt-2 text-gray-700 leading-relaxed">{item.answer}</p>
+                          </div>
+                          <div>
+                            <strong className="text-lg text-green-600">Explanation:</strong>
+                            <p className="mt-2 text-gray-600 leading-relaxed italic">{item.explanation}</p>
+                          </div>
                         </div>
                       ))}
                     </div>
+
                   </div>
                 )}
               </div>

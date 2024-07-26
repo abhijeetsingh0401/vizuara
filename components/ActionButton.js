@@ -145,6 +145,116 @@ const ActionButtons = ({ contentRef, result, docType }) => {
             return;
         }
 
+        if (result['text-question']) {
+            // Add title
+            doc.setFontSize(14);
+            doc.text("Original Text:", padding, yPos);
+            yPos += 10;
+            doc.setFontSize(12);
+            
+            const maxWidth = doc.internal.pageSize.width - 2 * padding;
+            const textLines = doc.splitTextToSize(result['Original Text'], maxWidth);
+            
+            textLines.forEach((line) => {
+                if (yPos > maxYPos - 10) {
+                    doc.addPage();
+                    yPos = padding;
+                }
+                doc.text(line, padding, yPos);
+                yPos += 10;
+            });
+            
+            yPos += 15;
+    
+            // Add Original Text if present
+            if (result.OriginalText) {
+                doc.setFontSize(14);
+                doc.text("Original Text:", padding, yPos);
+                yPos += 10;
+                doc.setFontSize(12);
+                const textLines = doc.splitTextToSize(result.OriginalText, doc.internal.pageSize.width - 2 * padding);
+                textLines.forEach((line) => {
+                    if (yPos > maxYPos - 10) {
+                        doc.addPage();
+                        yPos = padding;
+                    }
+                    doc.text(line, padding, yPos);
+                    yPos += 10;
+                });
+                yPos += 15;
+            }
+    
+            // Questions section
+            doc.setFontSize(14);
+            doc.text("Questions", padding, yPos);
+            yPos += 15;
+    
+            result['text-question'].forEach((item, index) => {
+                const questionText = `${index + 1}. ${item.question} (${item.difficulty})`;
+                const lines = doc.splitTextToSize(questionText, doc.internal.pageSize.width - 2 * padding);
+                lines.forEach((line) => {
+                    if (yPos > maxYPos - 10) {
+                        doc.addPage();
+                        yPos = padding;
+                    }
+                    doc.text(line, padding, yPos);
+                    yPos += 10;
+                });
+                yPos += 5;
+            });
+    
+            // Answers and Explanations section
+            doc.addPage();
+            yPos = padding;
+            doc.setFontSize(14);
+            doc.text("Answers and Explanations", padding, yPos);
+            yPos += 15;
+    
+            result['text-question'].forEach((item, index) => {
+                doc.setFontSize(12);
+                //doc.setTextColor(0, 0, 255); // Blue color for "Answer"
+                doc.text(`Answer ${index + 1}:`, padding, yPos);
+                yPos += 10;
+                
+                doc.setTextColor(0, 0, 0); // Reset to black
+                const answerLines = doc.splitTextToSize(item.answer, doc.internal.pageSize.width - 2 * padding);
+                answerLines.forEach((line) => {
+                    if (yPos > maxYPos - 10) {
+                        doc.addPage();
+                        yPos = padding;
+                    }
+                    doc.text(line, padding, yPos);
+                    yPos += 10;
+                });
+                yPos += 5;
+    
+                //doc.setTextColor(0, 128, 0); // Green color for "Explanation"
+                doc.text("Explanation:", padding, yPos);
+                yPos += 10;
+    
+                doc.setTextColor(0, 0, 0); // Reset to black
+                const explanationLines = doc.splitTextToSize(item.explanation, doc.internal.pageSize.width - 2 * padding);
+                explanationLines.forEach((line) => {
+                    if (yPos > maxYPos - 10) {
+                        doc.addPage();
+                        yPos = padding;
+                    }
+                    doc.text(line, padding, yPos);
+                    yPos += 10;
+                });
+                yPos += 15;
+    
+                // if (yPos > maxYPos - 30) {
+                //     doc.addPage();
+                //     yPos = padding;
+                // }
+            });
+    
+            // Save the PDF
+            doc.save(`${result.Title}_text_questions.pdf`);
+            return;
+        }
+
         // Add title
         if (result.Title) {
             doc.text(result.Title, 20, yPos);
