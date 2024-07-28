@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 import { gradeLevels, numberOfQuestions, textQuestionTypeOptions } from '@utils/utils';
 import PdfTextExtractor from "@components/PdfTextExtractor";
 
-export default function TextDependentQuestion() {
+export default function TextDependentQuestion({params}) {
   const contentRef = useRef(null);
   const { user, username } = useContext(UserContext); // Get user and username from UserContext
   const router = useRouter(); // Get router from next/navigation

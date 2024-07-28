@@ -1,20 +1,20 @@
-'use client'
-import { useState, useRef, useContext, useEffect } from "react";
+"use client";
+import { useState, useRef, useEffect, useContext } from "react";
 import { jsPDF } from "jspdf";
-import { firestore, doc, setDoc, getDoc, writeBatch } from '@lib/firebase'; // Import Firestore methods from your library
+import { firestore, doc, setDoc, writeBatch } from '@lib/firebase'; // Import Firestore methods from your library
 import { UserContext } from '@lib/context'; // Import UserContext to get the user data
 import { useRouter } from 'next/navigation';
 import ActionButtons from '@components/ActionButton';
 import toast from 'react-hot-toast';
+import { gradeLevels, numberOfQuestions, textQuestionTypeOptions } from '@utils/utils';
+import PdfTextExtractor from "@components/PdfTextExtractor";
 
-export default function YouTubePage({ params }) {
+export default function TextDependentQuestion({params}) {
   const contentRef = useRef(null);
   const { user, username } = useContext(UserContext); // Get user and username from UserContext
   const router = useRouter(); // Get router from next/navigation
-
   const { id } = params;
-  console.log("ID:", id)
-
+  
   const [isFormVisible, setIsFormVisible] = useState(true);
   const [result, setResult] = useState();
   const [isLoading, setIsLoading] = useState(false);
@@ -22,94 +22,39 @@ export default function YouTubePage({ params }) {
   const [formData, setFormData] = useState({
     gradeLevel: "5th-grade",
     numberOfQuestions: 3,
-    questionTypes: "MCQ",
-    videoIdOrURL: "",
+    questionTypes: "Comprehension",
     hardQuestions: 1,
     mediumQuestions: 1,
     easyQuestions: 1,
+    questionText: "",
+    pdfText: ""
   });
+
+  const [pdfjsLib, setPdfjsLib] = useState(null);
   const [docId, setDocId] = useState(null); // State to store the document ID
 
-  // useEffect(() => {
-  //   // Redirect to /enter page if the user is not logged in
-  //   if (!user) {
-  //     router.push('/enter');
-  //   }
-  // }, [user, router]);
+//   useEffect(() => {
+//     // Redirect to /enter page if the user is not logged in
+//     if (!user) {
+//       router.push('/enter');
+//     }
+//   }, [user, router]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!username || !id) return;
+    // Dynamically import pdfjs-dist
+    import('pdfjs-dist/webpack').then((module) => {
+      setPdfjsLib(module);
+    });
+  }, []);
 
-      const decodedTimestamp = decodeURIComponent(id);
-      console.log("decodedTimeStamp:",decodedTimestamp)
-      
-      try {
-        const docRef = doc(firestore, `history/${username}/results/${decodedTimestamp}`);
-        const docSnap = await getDoc(docRef);
+  const handlePdfTextExtracted = (extractedText, targetField) => {
 
-        //console.log(typeof id, id)
+    setFormData(prevState => ({
+      ...prevState,
+      [targetField]: prevState[targetField] + (prevState[targetField] ? '\n\n' : '') + extractedText
+    }));
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setFormData(data.formData);
-          setResult(data.result);
-          setDocId(decodedTimestamp)
-          console.log("DATA:", data);
-          setIsFormVisible(false)
-        } else {
-          console.log("No such document!");
-        }
-      } catch (error) {
-        console.error("Error fetching document: ", error);
-        setError("Failed to load data. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [username, id]);
-
-  const gradeLevels = [
-    { value: "5th-grade", label: "5th grade" },
-    { value: "6th-grade", label: "6th grade" },
-    { value: "7th-grade", label: "7th grade" },
-    { value: "8th-grade", label: "8th grade" },
-    { value: "9th-grade", label: "9th grade" },
-    { value: "10th-grade", label: "10th grade" },
-    { value: "11th-grade", label: "11th grade" },
-    { value: "12th-grade", label: "12th grade" },
-  ];
-
-  const numberOfQuestions = [
-    { value: 1, label: "1" },
-    { value: 2, label: "2" },
-    { value: 3, label: "3" },
-    { value: 4, label: "4" },
-    { value: 5, label: "5" },
-    { value: 6, label: "6" },
-    { value: 7, label: "7" },
-    { value: 8, label: "8" },
-    { value: 9, label: "9" },
-    { value: 10, label: "10" },
-    { value: 11, label: "11" },
-    { value: 12, label: "12" },
-    { value: 13, label: "13" },
-    { value: 14, label: "14" },
-    { value: 15, label: "15" },
-    { value: 16, label: "16" },
-    { value: 17, label: "17" },
-    { value: 18, label: "18" },
-    { value: 19, label: "19" },
-    { value: 20, label: "20" }
-  ];
-
-  const questionTypes = [
-    { value: "MCQ", label: "Multiple choice" },
-    { value: "TrueFalse", label: "True or False" },
-    { value: "FreeResponse", label: "Free response" },
-  ];
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -134,7 +79,9 @@ export default function YouTubePage({ params }) {
     let remainingQuestions = totalQuestions - value;
 
     // Get the current values of the other sliders
-    let otherValues = otherSliders.map(slider => formData[`${slider}Questions`]);
+    let otherValues = otherSliders.map(
+      (slider) => formData[`${slider}Questions`]
+    );
 
     // Calculate the new values for the other sliders
     if (remainingQuestions >= 0) {
@@ -142,7 +89,9 @@ export default function YouTubePage({ params }) {
         if (remainingQuestions <= 0) {
           return 0;
         }
-        let newValue = Math.floor(remainingQuestions / (otherValues.length - i));
+        let newValue = Math.floor(
+          remainingQuestions / (otherValues.length - i)
+        );
         remainingQuestions -= newValue;
         return newValue;
       });
@@ -163,32 +112,12 @@ export default function YouTubePage({ params }) {
     setError(null);
 
     try {
-      // First, attempt to get the transcript
-
-      const transcriptResponse = await fetch(`/api/get-transcript`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/text-dependent-question`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
-      });
-
-      if (!transcriptResponse.ok) {
-        const errorData = await transcriptResponse.json();
-        throw new Error(errorData.error);
-      }
-
-      const transcriptData = await transcriptResponse.json();
-      toast.success('Captions fetched now Generating Questions');
-      console.log(formData, transcriptData)
-
-      // If transcript is successfully fetched, proceed with the main API call
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/youtube-generator`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ...formData, transcriptData }),
       });
 
       if (!response.ok) {
@@ -197,33 +126,46 @@ export default function YouTubePage({ params }) {
       }
 
       const data = await response.json();
-
+      // Check for valid data
       if (!data || !data.Title) {
         toast.success('Received empty or invalid data');
       }
 
+      console.log("DATA:", data)
+
       setResult(data);
-      console.log("DATA:", data);
+      console.log("DATA:", data)
 
       if (user && username) {
         console.log("SAVING TO FIREBASE");
 
         const batch = writeBatch(firestore);
 
+        // Use the existing docId if it exists, otherwise generate a new one
         const newDocId = `${data.Title}:${new Date().toISOString()}`;
         const newResultDocRef = doc(firestore, `history/${username}/results/${newDocId}`);
 
-        batch.set(newResultDocRef, { formData, result: data, toolUrl: 'youtube' });
+        // Create the new document
+        batch.set(newResultDocRef, { formData, result: data });
 
+        // Delete the old document if docId exists
         if (docId) {
           const oldResultDocRef = doc(firestore, `history/${username}/results/${docId}`);
           batch.delete(oldResultDocRef);
         }
 
+        // Commit the batch operation
         await batch.commit();
 
-        toast.success(docId ? 'Updated Generated Youtube Questions to History!' : 'Saved Generated Youtube Questions to History!');
+        if (docId) {
+          toast.success('Updated question saved to history!');
+        } else {
+          toast.success('Generated question saved to history!');
+        }
+
+        // Update the document ID state only after successful operation
         setDocId(newDocId);
+
       }
 
       setIsFormVisible(false);
@@ -234,18 +176,18 @@ export default function YouTubePage({ params }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const handleBack = () => {
     setFormData({
       gradeLevel: "5th-grade",
+      questionTypes: "Comprehension",
       numberOfQuestions: 3,
-      questionTypes: "Worksheet - Fill in the blanks",
       hardQuestions: 1,
       mediumQuestions: 1,
       easyQuestions: 1,
       questionText: "",
-      pdfText: ""
+      pdfText: "",
     });
     setIsFormVisible(true);
     setResult(null);
@@ -259,25 +201,27 @@ export default function YouTubePage({ params }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 space-y-6">
       {isFormVisible && (
-        <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-lg p-6">
+        <div className="bg-white shadow rounded-lg overflow-hidden w-full max-w-3xl p-6">
+          {" "}
+          {/* Updated max-width */}
           <div className="flex flex-col space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold">YouTube Video Questions</h1>
+              <h1 className="text-xl font-bold">Text Dependent Questions</h1>
               <div className="flex space-x-2">
                 <button
                   className="flex items-center text-blue-500"
                   onClick={() => {
                     setFormData({
                       gradeLevel: "5th-grade",
+                      questionTypes: "Comprehension",
                       numberOfQuestions: 3,
-                      questionTypes: "MCQ",
-                      videoIdOrURL: "",
                       hardQuestions: 1,
                       mediumQuestions: 1,
                       easyQuestions: 1,
+                      questionText: "",
+                      pdfText: "",
                     });
                     setDocId(null);
-
                   }
                   }
                 >
@@ -293,9 +237,7 @@ export default function YouTubePage({ params }) {
                 </button>
               </div>
             </div>
-            <p className="text-gray-600">
-              Generate guiding questions aligned to a YouTube video.
-            </p>
+            <p className="text-gray-600">Text Dependent Question.</p>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
@@ -304,7 +246,7 @@ export default function YouTubePage({ params }) {
                 <select
                   name="gradeLevel"
                   data-tour-id="name-gradeLevel"
-                  required=""
+                  required
                   className="border border-gray-300 rounded-lg w-full h-10 px-2 bg-white"
                   value={formData.gradeLevel}
                   onChange={handleChange}
@@ -316,6 +258,28 @@ export default function YouTubePage({ params }) {
                   ))}
                 </select>
               </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Question Type:
+                </label>
+                <select
+                  name="questionTypes"
+                  data-tour-id="name-questionTypes"
+                  required
+                  className="border border-gray-300 rounded-lg w-full h-10 px-2 bg-white"
+                  value={formData.questionTypes || "Comprehension"}
+                  onChange={handleChange}
+                >
+                  {textQuestionTypeOptions.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
                   Number of Questions:
@@ -323,7 +287,7 @@ export default function YouTubePage({ params }) {
                 <select
                   name="numberOfQuestions"
                   data-tour-id="name-numberOfQuestions"
-                  required=""
+                  required
                   className="border border-gray-300 rounded-lg w-full h-10 px-2 bg-white"
                   value={formData.numberOfQuestions}
                   onChange={(e) => {
@@ -344,25 +308,7 @@ export default function YouTubePage({ params }) {
                   ))}
                 </select>
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Question Type:
-                </label>
-                <select
-                  name="questionTypes"
-                  data-tour-id="name-questionTypes"
-                  required=""
-                  className="border border-gray-300 rounded-lg w-full h-10 px-2 bg-white"
-                  value={formData.questionTypes}
-                  onChange={handleChange}
-                >
-                  {questionTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">
                   Hard Questions:
@@ -372,7 +318,9 @@ export default function YouTubePage({ params }) {
                   min="0"
                   max={formData.numberOfQuestions}
                   value={formData.hardQuestions}
-                  onChange={(e) => handleSliderChange("hard", parseInt(e.target.value, 10))}
+                  onChange={(e) =>
+                    handleSliderChange("hard", parseInt(e.target.value, 10))
+                  }
                 />
                 <span>{formData.hardQuestions}</span>
               </div>
@@ -385,7 +333,9 @@ export default function YouTubePage({ params }) {
                   min="0"
                   max={formData.numberOfQuestions}
                   value={formData.mediumQuestions}
-                  onChange={(e) => handleSliderChange("medium", parseInt(e.target.value, 10))}
+                  onChange={(e) =>
+                    handleSliderChange("medium", parseInt(e.target.value, 10))
+                  }
                 />
                 <span>{formData.mediumQuestions}</span>
               </div>
@@ -398,24 +348,34 @@ export default function YouTubePage({ params }) {
                   min="0"
                   max={formData.numberOfQuestions}
                   value={formData.easyQuestions}
-                  onChange={(e) => handleSliderChange("easy", parseInt(e.target.value, 10))}
+                  onChange={(e) =>
+                    handleSliderChange("easy", parseInt(e.target.value, 10))
+                  }
                 />
                 <span>{formData.easyQuestions}</span>
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Video ID or URL:
+
+              <div className="space-y-4">
+                <label className="block text-sm font-medium text-gray-700 flex items-center justify-between">
+                  Insert the text you want to generate text dependent questions
+                  for: <PdfTextExtractor onTextExtracted={handlePdfTextExtracted} targetField="questionText" />
                 </label>
-                <input
-                  name="videoIdOrURL"
-                  data-tour-id="name-videoIdOrURL"
-                  required=""
-                  placeholder="https://www.youtube.com/watch?v=8pIlOX_V25Q or 8pIlOX_V25Q"
-                  className="border border-gray-300 rounded-lg w-full h-10 px-2 bg-white"
-                  value={formData.videoIdOrURL}
-                  onChange={handleChange}
-                />
+                <div className="flex items-start space-x-2">
+
+                  <textarea
+                    type="text"
+                    name="questionText"
+                    data-tour-id="name-questionText"
+                    required
+                    placeholder="Insert the text you want to generate text dependent questions for."
+                    className="border border-gray-300 rounded-lg w-full h-16 px-2 py-2 bg-white"
+                    value={formData.questionText}
+                    onChange={handleChange}
+                    style={{ verticalAlign: "top", textAlign: "left" }}
+                  />
+                </div>
               </div>
+
               <div>
                 <button
                   type="submit"
@@ -446,7 +406,7 @@ export default function YouTubePage({ params }) {
                 >
                   Back
                 </button>
-                <h1 className="text-xl font-bold">Youtube Question Generator</h1>
+                <h1 className="text-xl font-bold">Text Dependent Question</h1>
                 <button
                   className="text-blue-500"
                   onClick={handleEditPrompt}
@@ -461,40 +421,55 @@ export default function YouTubePage({ params }) {
                 {result && (
                   <div>
                     <h2 className="text-xl font-bold mb-4">{result.Title}</h2>
+                    <p className="text-lg mb-4"><strong>Text Theme:</strong> {result['Original Theme']}</p>
 
-                    <div>
+                    {/* Original Text section - you'll need to add this to your data structure */}
+                    {result.OriginalText && (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold mb-2">Original Text:</h3>
+                        <p className="text-gray-700">{result.OriginalText}</p>
+                      </div>
+                    )}
+
+                    <div className="mb-8">
                       <h3 className="text-lg font-semibold mb-4">Questions</h3>
-                      {result.Questions.map((item, index) => (
+                      {result['text-question'].map((item, index) => (
                         <div key={index} className="mb-4">
-                          <p className="text-gray-700"><strong>{index + 1}. {item.question} ({item.difficulty})</strong></p>
-                          {item.options.map((option, optionIndex) => (
-                            <p key={optionIndex} className="ml-4">{String.fromCharCode(97 + optionIndex)}. {option}</p>
-                          ))}
+                          <p className="text-gray-700">
+                            <strong>{index + 1}. {item.question}</strong>
+                            <span className="text-sm text-gray-500 ml-2">({item.difficulty})</span>
+                          </p>
                         </div>
                       ))}
                     </div>
 
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Answers</h3>
-                      {result.Questions.map((item, index) => (
-                        <div key={index} className="mb-4">
-                          <p className="text-gray-700"><strong>{index + 1}. Correct Answer: {item.answer}</strong></p>
-                          <p className="text-gray-700"><em>Explanation: {item.explanation}</em></p>
+                    <div className="mt-8">
+                      <h3 className="text-xl font-bold mb-6 text-gray-800">Answers and Explanations</h3>
+                      {result['text-question'].map((item, index) => (
+                        <div key={index} className="mb-8 p-6 bg-white">
+                          <div className="mb-4">
+                            <strong className="text-lg text-blue-600">Answer {index + 1}:</strong>
+                            <p className="mt-2 text-gray-700 leading-relaxed">{item.answer}</p>
+                          </div>
+                          <div>
+                            <strong className="text-lg text-green-600">Explanation:</strong>
+                            <p className="mt-2 text-gray-600 leading-relaxed italic">{item.explanation}</p>
+                          </div>
                         </div>
                       ))}
                     </div>
+
                   </div>
                 )}
               </div>
 
               <br />
 
-              <ActionButtons contentRef={contentRef} result={result} docType={'youtube-generator'} />
+              <ActionButtons contentRef={contentRef} result={result} docType={'text-dependent-question'} />
             </div>
           )}
         </div>
       )}
-
     </div>
   );
 }

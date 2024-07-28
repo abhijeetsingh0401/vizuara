@@ -92,7 +92,8 @@ export default function History() {
                 <tr key={result.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <a href={`/tools/${result.toolUrl}/${result.id}`} className="text-sm font-medium text-blue-600 hover:underline">{result.result.Title}</a>
+                      {/* <a href={`/tools/${result.toolUrl}/${result.id}`} className="text-sm font-medium text-blue-600 hover:underline">{result.result.Title}</a> */}
+                      {result.result.Title}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(result.id.split(':').slice(1).join(':')).toLocaleString()}</td>
