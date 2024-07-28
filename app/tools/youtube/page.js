@@ -24,7 +24,7 @@ export default function YouTubePage({ params }) {
     easyQuestions: 1,
   });
   const [docId, setDocId] = useState(null); // State to store the document ID
- 
+
   const questionTypes = [
     { value: "MCQ", label: "Multiple choice" },
     { value: "TrueFalse", label: "True or False" },
@@ -99,9 +99,9 @@ export default function YouTubePage({ params }) {
       }
 
       const transcriptData = await transcriptResponse.json();
-
       toast.success('Captions fetched now Generating Questions');
-      
+      console.log(formData, transcriptData)
+
       // If transcript is successfully fetched, proceed with the main API call
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/youtube-generator`, {
         method: "POST",
@@ -133,7 +133,7 @@ export default function YouTubePage({ params }) {
         const newDocId = `${data.Title}:${new Date().toISOString()}`;
         const newResultDocRef = doc(firestore, `history/${username}/results/${newDocId}`);
 
-        batch.set(newResultDocRef, { formData, result: data, toolUrl: 'youtube'  });
+        batch.set(newResultDocRef, { formData, result: data, toolUrl: 'youtube' });
 
         if (docId) {
           const oldResultDocRef = doc(firestore, `history/${username}/results/${docId}`);
