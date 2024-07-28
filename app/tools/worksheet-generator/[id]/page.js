@@ -12,6 +12,7 @@ import PdfTextExtractor from "@components/PdfTextExtractor";
 export default function WorksheetGenerator({ params }) {
     const contentRef = useRef(null);
     const { user, username } = useContext(UserContext); // Get user and username from UserContext
+    const { id } = params;
 
     const [isFormVisible, setIsFormVisible] = useState(true);
     const [result, setResult] = useState();
@@ -28,6 +29,39 @@ export default function WorksheetGenerator({ params }) {
         pdfText: ""
     });
     const [docId, setDocId] = useState(null); // State to store the document ID
+
+    useEffect(() => {
+        const fetchData = async () => {
+          if (!username || !id) return;
+    
+          const decodedTimestamp = decodeURIComponent(id);
+          console.log("decodedTimeStamp:",decodedTimestamp)
+          
+          try {
+            const docRef = doc(firestore, `history/${username}/results/${decodedTimestamp}`);
+            const docSnap = await getDoc(docRef);
+    
+            //console.log(typeof id, id)
+    
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              setFormData(data.formData);
+              setResult(data.result);
+              console.log("DATA:", data);
+              setIsFormVisible(false)
+            } else {
+              console.log("No such document!");
+            }
+          } catch (error) {
+            console.error("Error fetching document: ", error);
+            setError("Failed to load data. Please try again.");
+          } finally {
+            setIsLoading(false);
+          }
+        };
+    
+        fetchData();
+      }, [username, id]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;

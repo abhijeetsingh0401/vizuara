@@ -9,7 +9,7 @@ export default function History() {
   const { user, username } = useContext(UserContext); // Get user and username from UserContext
   const router = useRouter(); // Get router from next/navigation
 
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -46,10 +46,6 @@ export default function History() {
     }
   }, [user, username, router]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   if (error) {
     return <div>{error}</div>;
   }
@@ -72,9 +68,16 @@ export default function History() {
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <h1 className="text-2xl font-bold mb-4">Your History</h1>
-      {results.length === 0 ? (
+
+      {loading && (
+        <p>Loading...</p>
+      )}
+
+      {results?.length === 0 && (
         <p>No results found.</p>
-      ) : (
+      )}
+
+      { results?.length>0 &&  (
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -89,7 +92,7 @@ export default function History() {
                 <tr key={result.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <a href={`/tools/youtube/${result.id}`} className="text-sm font-medium text-blue-600 hover:underline">{result.result.Title}</a>
+                      <a href={`/tools/${result.toolUrl}/${result.id}`} className="text-sm font-medium text-blue-600 hover:underline">{result.result.Title}</a>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(result.id.split(':').slice(1).join(':')).toLocaleString()}</td>
