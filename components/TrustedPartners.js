@@ -4,6 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import styles from './TrustedPartners.module.css'; // Assuming you have CSS module for styles
 
 const partners = [
+  { src: "/1702561558197.jpeg", alt: "CBS" },
+  { src: "/Orbis Logo.jpeg", alt: "Orbis" },
+  { src: "/Vidya Prathishtan.jpg", alt: "Vidya Prathishtan" },
+  { src: "/CityPride School Pune.png", alt: "CityPride School Pune" },
+  { src: "/kaveri_new.png", alt: "kaveri_new" },
+  { src: "/SES-GURUKUL-LOGO.png", alt: "SES-GURUKUL-LOGO" },
+  { src: "/SGI-Logo.fd27914984c3b0765392.png", alt: "SGI" },
+  { src: "/Zeal College Pune.png", alt: "Zeal College Pune" },
   { src: "https://cdn.prod.website-files.com/645187265d5e5e386be40629/659738d7e575003017da1350_DCS_FullColor_Main_RGB.png", alt: "Dublin City Schools" },
   { src: "https://cdn.prod.website-files.com/645187265d5e5e386be40629/65a1a9c33b3d6f019a4379cb_Relay%20GSE.png", alt: "Relay GSE" },
   { src: "https://cdn.prod.website-files.com/645187265d5e5e386be40629/65a1a9ad894444fd351a715d_Catawba.png", alt: "Catawba County Schools" },
@@ -32,7 +40,7 @@ export default function TrustedPartners() {
 
   return (
     <div className={styles.carouselContainer}>
-      <h2>TRUSTED BY 4,000+ SCHOOL & DISTRICT PARTNERS WORLDWIDE</h2>
+      <h2>TRUSTED BY 25+ SCHOOL AND COLLEGE PARTNERS WORLDWIDE</h2>
       <div className={styles.carouselInner} ref={containerRef}>
         <div className={styles.carouselTrack}>
           {partners.map((partner, index) => (
@@ -40,8 +48,8 @@ export default function TrustedPartners() {
               <Image
                 src={partner.src}
                 alt={partner.alt}
-                width={200}
-                height={100}
+                width={140}
+                height={80}
                 className={styles.carouselImage}
               />
             </div>
